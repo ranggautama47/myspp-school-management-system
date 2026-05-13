@@ -56,8 +56,10 @@ class ReportService
 
     private function totalIncomeThisMonth(): float
     {
-        return (float) Transaction::paid()
-            ->thisMonth()
+        return (float) Transaction::query()
+            ->where('transactions.payment_status', 'paid')
+            ->whereMonth('transactions.created_at', now()->month)
+            ->whereYear('transactions.created_at', now()->year)
             ->join('departments', 'transactions.department_id', '=', 'departments.id')
             ->sum('departments.cost');
     }

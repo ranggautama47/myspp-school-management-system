@@ -112,8 +112,8 @@ class Transaction extends Model
 
     public function scopeThisMonth($query)
     {
-        return $query->whereMonth('created_at', now()->month)
-                     ->whereYear('created_at', now()->year);
+        return $query->whereMonth('transactions.created_at', now()->month)
+            ->whereYear('transactions.created_at', now()->year);
     }
 
     // =========================================
