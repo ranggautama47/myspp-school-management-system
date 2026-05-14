@@ -16,10 +16,10 @@ class DepartmentResource extends Resource
 {
     protected static ?string $model = Department::class;
 
-    protected static ?string $navigationIcon  = 'heroicon-o-building-office-2';
+    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
     protected static ?string $navigationLabel = 'Departments';
     protected static ?string $navigationGroup = 'Academic';
-    protected static ?int    $navigationSort  = 1;
+    protected static ?int $navigationSort = 2;
 
     // Global search
     protected static ?string $recordTitleAttribute = 'name';
@@ -87,7 +87,7 @@ class DepartmentResource extends Resource
 
                 Tables\Columns\TextColumn::make('cost')
                     ->label('SPP Cost')
-                    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float)$state, 0, ',', '.'))
+                    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float) $state, 0, ',', '.'))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('transactions_count')
@@ -145,9 +145,9 @@ class DepartmentResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListDepartments::route('/'),
+            'index' => Pages\ListDepartments::route('/'),
             'create' => Pages\CreateDepartment::route('/create'),
-            'edit'   => Pages\EditDepartment::route('/{record}/edit'),
+            'edit' => Pages\EditDepartment::route('/{record}/edit'),
         ];
     }
 

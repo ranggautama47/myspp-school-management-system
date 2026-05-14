@@ -15,8 +15,9 @@ class TransactionResource extends Resource
     protected static ?string $model = Transaction::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationGroup = 'Finance';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -88,7 +89,7 @@ class TransactionResource extends Resource
 
                 Tables\Columns\TextColumn::make('department.cost')
                     ->label('Amount (IDR)')
-                    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float)$state, 2, ',', '.'))
+                    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float) $state, 2, ',', '.'))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('payment_status')

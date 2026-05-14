@@ -11,8 +11,9 @@ use Filament\Widgets\TableWidget as BaseWidget;
 class RecentTransactionsWidget extends BaseWidget
 {
     protected static ?int $sort = 2;
-
     protected int|string|array $columnSpan = 'full';
+
+    protected static ?string $pollingInterval = null;
 
     protected static ?string $heading = 'Recent Transactions';
 

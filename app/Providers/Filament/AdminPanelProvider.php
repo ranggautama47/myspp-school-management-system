@@ -4,11 +4,13 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\PaymentOverviewWidget;
+use App\Filament\Widgets\PaymentTrendsWidget;
 use App\Filament\Widgets\RecentTransactionsWidget;
 use App\Filament\Widgets\StatsOverviewWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -31,12 +33,17 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
 
-            // ===== BRANDING =====
+            // =============================================
+            // BRANDING
+            // =============================================
             ->brandName('MySPP')
-            // ->brandLogo(asset('images/logo.svg'))  // TODO: create images/logo.svg
-            ->favicon(asset('favicon.ico'))
+            ->brandLogo(fn() => view('filament.brand'))
+            ->brandLogoHeight('2.5rem')
+            ->favicon(asset('images/android-chrome-512x512.png'))
 
-            // ===== WARNA — primary hijau emerald sesuai blueprint =====
+            // =============================================
+            // WARNA — Emerald primary sesuai blueprint
+            // =============================================
             ->colors([
                 'primary' => Color::Emerald,
                 'gray' => Color::Slate,
@@ -46,20 +53,69 @@ class AdminPanelProvider extends PanelProvider
                 'danger' => Color::Rose,
             ])
 
-            // ===== DARK MODE default =====
+            // =============================================
+            // DARK MODE — default dark, toggle tetap ada
+            // =============================================
             ->darkMode(true)
 
-            // ===== MAX WIDTH dashboard =====
-            ->maxContentWidth(MaxWidth::Full)
-
-            // ===== CUSTOM THEME CSS =====
-            ->viteTheme('resources/css/filament/admin/theme.css')
-
-            // ===== NAVIGASI GLOBAL SEARCH =====
+            // =============================================
+            // TOPBAR — search, notif, profile
+            // =============================================
             ->globalSearch(true)
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
 
-            // ===== PAGES, RESOURCES, WIDGETS =====
+            // =============================================
+            // USER MENU — tampilkan nama + role
+            // Filament v3 menggunakan getUserMenuItems untuk
+            // customize menu, tapi untuk nama+role di topbar
+            // kita inject via Blade view custom
+            // =============================================
+            ->userMenuItems([
+                \Filament\Navigation\MenuItem::make()
+                    ->label(fn() => auth()->user()?->name ?? 'Profile')
+                    ->icon('heroicon-o-user-circle')
+                    ->url(fn() => '#'),
+            ])
+
+            // =============================================
+            // RENDER HOOK — inject role subtitle di user menu
+            // Ini yang membuat "Super Administrator" muncul
+            // di bawah nama user di topbar
+            // =============================================
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::USER_MENU_BEFORE,
+                fn(): string => $this->getUserMenuTopbarHtml(),
+            )
+
+
+            // =============================================
+            // MAX WIDTH
+            // =============================================
+            ->maxContentWidth(MaxWidth::Full)
+
+            // =============================================
+            // CUSTOM THEME CSS
+            // =============================================
+            ->viteTheme('resources/css/filament/admin/theme.css')
+
+            // =============================================
+            // NAVIGATION GROUPS — tanpa icon (items sudah punya icon)
+            // Filament rule: group OR items can have icons, not both
+            // =============================================
+            ->navigationGroups([
+                NavigationGroup::make('Academic')
+                    ->collapsed(false),
+
+                NavigationGroup::make('Finance')
+                    ->collapsed(false),
+
+                NavigationGroup::make('System')
+                    ->collapsed(false),
+            ])
+
+            // =============================================
+            // DISCOVERY
+            // =============================================
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
@@ -68,8 +124,9 @@ class AdminPanelProvider extends PanelProvider
 
             ->widgets([
                 StatsOverviewWidget::class,
-                RecentTransactionsWidget::class,
+                PaymentTrendsWidget::class,
                 PaymentOverviewWidget::class,
+                RecentTransactionsWidget::class,
             ])
 
             ->middleware([
@@ -84,5 +141,51 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([Authenticate::class]);
+    }
+    /**
+     * Inject HTML nama + role di atas user menu dropdown
+     * Tampil: nama user + role (Super Administrator / Student)
+     */
+    private function getUserMenuTopbarHtml(): string
+    {
+        $user = auth()->user();
+        if (!$user)
+            return '';
+
+        $role = $user->getRoleNames()->first() ?? 'user';
+
+        $roleLabel = match ($role) {
+            'admin' => 'Super Administrator',
+            'student' => 'Student',
+            default => ucfirst($role),
+        };
+
+        // Avatar — foto atau inisial
+        $avatarUrl = $user->image
+            ? \Illuminate\Support\Facades\Storage::url($user->image)
+            : 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=10B981&color=fff&size=64';
+
+        return "
+        <div style='
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(51,65,85,0.5);
+            margin-bottom: 4px;
+        '>
+            <img src='{$avatarUrl}'
+                 style='width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;'
+                 alt='{$user->name}' />
+            <div style='min-width:0;'>
+                <div style='font-size:0.85rem;font-weight:600;color:#F1F5F9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>
+                    {$user->name}
+                </div>
+                <div style='font-size:0.72rem;color:#64748B;margin-top:1px;'>
+                    {$roleLabel}
+                </div>
+            </div>
+        </div>
+        ";
     }
 }

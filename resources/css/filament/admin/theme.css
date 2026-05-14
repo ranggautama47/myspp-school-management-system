@@ -1,182 +1,459 @@
 /*
- * MySPP — Filament Dark Enterprise Theme
+ * MySPP — Filament Dark & Light Enterprise Theme
  * Sesuai blueprint: Slate 950 bg, Emerald primary, dark sidebar
  *
- * File ini di-import via AdminPanelProvider::viteTheme()
  * Jalankan: npm run build setelah edit file ini
  */
 
-@import '/vendor/filament/filament/resources/css/theme.css';
+@import "/vendor/filament/filament/resources/css/theme.css";
 @config '../../../../tailwind.config.js';
 
 /* =============================================
-   ROOT VARIABLES — override Filament defaults
+   SIDEBAR — Dark: Slate 950, Light: White
    ============================================= */
-:root {
-    --sidebar-width: 16rem;
+.dark .fi-sidebar {
+    background-color: #0f172a !important;
+    border-right: 1px solid #1e293b !important;
 }
-   
-/* =============================================
-   FORCE DARK MODE — sesuai blueprint
-   ============================================= */
-html {
-    color-scheme: dark;
+.dark .fi-sidebar-header {
+    background-color: #0f172a !important;
+    border-bottom: 1px solid #1e293b !important;
+    padding: 1rem 1rem 0.75rem !important;
 }
-   
-/* =============================================
-   SIDEBAR — Slate 900 dark
-   ============================================= */
 .fi-sidebar {
-    background-color: rgb(15 23 42) !important; /* slate-950 */
-    border-right: 1px solid rgb(30 41 59) !important; /* slate-800 */
+    background-color: #ffffff !important;
+    border-right: 1px solid #e2e8f0 !important;
+}
+.fi-sidebar-header {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 1rem 1rem 0.75rem !important;
 }
 
-.fi-sidebar-nav {
-    padding: 0.5rem;
-}
-
-/* Navigation group labels */
+/* Nav group labels */
 .fi-sidebar-group-label {
-    color: rgb(100 116 139) !important; /* slate-500 */
     font-size: 0.65rem !important;
     font-weight: 600 !important;
     letter-spacing: 0.1em !important;
     text-transform: uppercase !important;
-    padding: 0.75rem 0.75rem 0.25rem !important;
+    padding: 1rem 0.75rem 0.35rem !important;
 }
-   
-/* Active nav item */
-.fi-sidebar-item-active .fi-sidebar-item-button {
-    background-color: rgb(5 150 105 / 0.15) !important; /* emerald/15 */
-    color: rgb(52 211 153) !important; /* emerald-400 */
+.dark .fi-sidebar-group-label {
+    color: #475569 !important;
+}
+.fi-sidebar-group-label {
+    color: #94a3b8 !important;
 }
 
-.fi-sidebar-item-active .fi-sidebar-item-icon {
-    color: rgb(52 211 153) !important;
+/* Nav item */
+.fi-sidebar-item-button {
+    border-radius: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+    margin-bottom: 2px !important;
+    transition: all 0.15s ease !important;
+}
+.dark .fi-sidebar-item-button {
+    color: #94a3b8 !important;
+}
+.fi-sidebar-item-button {
+    color: #475569 !important;
+}
+
+.fi-sidebar-item-button:hover {
+    background-color: rgba(16, 185, 129, 0.08) !important;
+}
+.dark .fi-sidebar-item-button:hover {
+    color: #e2e8f0 !important;
+}
+.fi-sidebar-item-button:hover {
+    color: #0f172a !important;
 }
 
 /* =============================================
-   TOPBAR / HEADER
+   ACTIVE NAV ITEM — Garis hijau di KANAN
    ============================================= */
+.fi-sidebar-item-active .fi-sidebar-item-button {
+    background-color: rgba(16, 185, 129, 0.12) !important;
+    color: #10b981 !important;
+    position: relative !important;
+
+    /* SEKARANG: Melengkung di kiri (8px), Rata di kanan (0px) agar pas dengan garis */
+    border-radius: 8px 0 0 8px !important;
+
+    /* Beri sedikit margin kanan agar tidak benar-benar menempel ke pinggir jika ada padding */
+    margin-right: 0 !important;
+    overflow: hidden;
+}
+
+/* Garis hijau vertikal di sisi paling KANAN */
+.fi-sidebar-item-active .fi-sidebar-item-button::before {
+    content: "" !important;
+    position: absolute !important;
+
+    /* KUNCI PERUBAHAN: Pindah ke kanan */
+    left: auto !important;
+    right: 0 !important;
+
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 4px !important;
+    height: 100% !important;
+    background-color: #10b981 !important;
+    border-radius: 0 !important;
+}
+
+/* Warna Icon saat Aktif */
+.fi-sidebar-item-active .fi-sidebar-item-icon {
+    color: #10b981 !important;
+}
+
+/* Warna Icon saat Aktif */
+.fi-sidebar-item-active .fi-sidebar-item-icon {
+    color: #10b981 !important;
+}
+
+/* =============================================
+   TOPBAR
+   ============================================= */
+.dark .fi-topbar {
+    background-color: #0f172a !important;
+    border-bottom: 1px solid #1e293b !important;
+}
 .fi-topbar {
-    background-color: rgb(15 23 42) !important;
-    border-bottom: 1px solid rgb(30 41 59) !important;
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* =============================================
+   SEARCH BAR — Paksa pindah ke KIRI
+   ============================================= */
+
+/* Pastikan container nav di topbar flex */
+.fi-topbar nav {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 1rem !important;
+}
+
+/* Search wrapper - paksa jadi order 1 */
+.fi-topbar .fi-global-search-field-wrapper {
+    order: 1 !important;
+    flex: 1 1 auto !important; 
+    max-width: 300px !important;
+}
+
+/* Item navigasi lainnya (logo, dsb) */
+.fi-topbar .fi-sidebar-open-button {
+    order: 0 !important;
+}
+
+/* Item di kanan (user menu, dark toggle) */
+.fi-topbar .fi-topbar-end-items {
+    order: 2 !important;
+    margin-left: auto !important;
+}
+
+/* =============================================
+   USER MENU TOPBAR — tampilkan nama + role
+   Sesuai blueprint: [foto] Admin / Super Administrator ▼
+   ============================================= */
+.fi-user-menu-trigger {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 5px 10px 5px 5px !important;
+    border-radius: 0.5rem !important;
+    min-width: 0 !important;
+}
+.dark .fi-user-menu-trigger {
+    border: 1px solid #1e293b !important;
+    background-color: rgba(30, 41, 59, 0.5) !important;
+}
+.fi-user-menu-trigger {
+    border: 1px solid #e2e8f0 !important;
+}
+
+/* Avatar foto profil */
+.fi-user-menu-trigger .fi-user-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
+}
+
+/* Text area: nama + role */
+.fi-user-menu-trigger .fi-user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1px !important;
+    min-width: 0 !important;
+}
+
+/* Nama user */
+.fi-user-name {
+    display: block !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+}
+.dark .fi-user-name {
+    color: #f1f5f9 !important;
+}
+.fi-user-name {
+    color: #1e293b !important;
+}
+
+/* Role/jabatan di bawah nama — custom class via CSS :after trick */
+/* Karena Filament tidak expose role di topbar secara native,
+   kita inject via data attribute di AdminPanelProvider via renderHook.
+   Untuk sementara, tampilkan email sebagai subtitle */
+.fi-user-menu-trigger::after {
+    /* Placeholder — akan di-override via renderHook */
+    display: none;
 }
 
 /* =============================================
    MAIN CONTENT BACKGROUND
    ============================================= */
+.dark .fi-main {
+    background-color: #020617 !important;
+}
 .fi-main {
-    background-color: rgb(2 6 23) !important; /* slate-950 lebih gelap */
+    background-color: #f8fafc !important;
 }
 
 /* =============================================
-   CARDS / SECTIONS
+   DASHBOARD HEADER
+   Filter date range (tombol kompak) di kanan atas
    ============================================= */
+.fi-page-header {
+    padding-bottom: 0.75rem !important;
+}
+
+/* =============================================
+   WIDGET PAYMENT OVERVIEW — fix overflow/terpotong
+   ============================================= */
+
+/* Pastikan container chart tidak clip content */
+.fi-wi-chart {
+    overflow: visible !important;
+}
+
+/* Canvas chart — beri ruang bawah untuk legend */
+.fi-wi-chart canvas {
+    margin-bottom: 0.5rem !important;
+}
+
+/* Fix dihapus karena menyebabkan resize loop pada Chart.js (flickering) */
+
+/* =============================================
+   ICON KALENDER — pastikan tetap visible
+   Jangan sembunyikan suffix/prefix input
+   ============================================= */
+
+/* Jangan override svg/icon di dalam date picker */
+.fi-input-wrp svg,
+.fi-input-wrp .fi-input-suffix,
+.fi-input-wrp .fi-input-prefix {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Warna icon kalender dark mode */
+.dark .fi-input-wrp svg {
+    color: #64748b !important;
+}
+.fi-input-wrp svg {
+    color: #94a3b8 !important;
+}
+
+/* =============================================
+   CARDS / SECTIONS / WIDGETS
+   ============================================= */
+.dark .fi-section,
+.dark .fi-wi-stats-overview-stat,
+.dark .fi-card,
+.dark .fi-wi-chart {
+    background-color: #1e293b !important;
+    border: 1px solid #334155 !important;
+    border-radius: 0.75rem !important;
+}
 .fi-section,
 .fi-wi-stats-overview-stat,
-.fi-card {
-    background-color: rgb(15 23 42) !important; /* slate-900 */
-    border: 1px solid rgb(30 41 59) !important; /* slate-800 */
+.fi-card,
+.fi-wi-chart {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 0.75rem !important;
+}
+
+/* Stats card values */
+.fi-wi-stats-overview-stat-value {
+    font-size: 1.9rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+}
+.dark .fi-wi-stats-overview-stat-value {
+    color: #f8fafc !important;
+}
+.fi-wi-stats-overview-stat-value {
+    color: #0f172a !important;
+}
+
+.fi-wi-stats-overview-stat-label {
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+}
+.dark .fi-wi-stats-overview-stat-label {
+    color: #94a3b8 !important;
+}
+.fi-wi-stats-overview-stat-label {
+    color: #64748b !important;
+}
+
+.fi-wi-chart-heading,
+.fi-header-heading {
+    font-weight: 500 !important;
+}
+.dark .fi-wi-chart-heading,
+.dark .fi-header-heading {
+    color: #e2e8f0 !important;
 }
 
 /* =============================================
    TABLE
    ============================================= */
+.dark .fi-ta-table {
+    background-color: #1e293b !important;
+}
 .fi-ta-table {
-    background-color: rgb(15 23 42) !important;
+    background-color: #ffffff !important;
 }
 
-.fi-ta-row:hover td {
-    background-color: rgb(30 41 59 / 0.5) !important;
+.dark .fi-ta-header-cell {
+    background-color: #1e293b !important;
+    color: #64748b !important;
 }
-
-/* Stripe rows */
-.fi-ta-row:nth-child(even) td {
-    background-color: rgb(15 23 42 / 0.8) !important;
-}
-
-/* =============================================
-   BADGE STATUS COLORS
-   ============================================= */
-
-/* success = emerald */
-.fi-badge-color-success {
-    background-color: rgb(6 78 59 / 0.4) !important;
-    color: rgb(52 211 153) !important;
-    border: 1px solid rgb(6 78 59) !important;
-}
-
-/* warning = amber */
-.fi-badge-color-warning {
-    background-color: rgb(120 53 15 / 0.4) !important;
-    color: rgb(251 191 36) !important;
-    border: 1px solid rgb(120 53 15) !important;
-}
-
-/* danger = rose */
-.fi-badge-color-danger {
-    background-color: rgb(136 19 55 / 0.4) !important;
-    color: rgb(251 113 133) !important;
-    border: 1px solid rgb(136 19 55) !important;
-}
-
-/* info = blue */
-.fi-badge-color-info {
-    background-color: rgb(30 58 138 / 0.4) !important;
-    color: rgb(147 197 253) !important;
-    border: 1px solid rgb(30 58 138) !important;
-}
-
-/* =============================================
-   STATS OVERVIEW WIDGET
-   ============================================= */
-.fi-wi-stats-overview-stat {
-    padding: 1.25rem 1.5rem !important;
-}
-
-.fi-wi-stats-overview-stat-value {
-    font-size: 1.75rem !important;
+.fi-ta-header-cell {
+    background-color: #f8fafc !important;
+    color: #64748b !important;
+    font-size: 0.75rem !important;
     font-weight: 600 !important;
-    color: rgb(248 250 252) !important; /* slate-50 */
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
 }
 
-.fi-wi-stats-overview-stat-label {
-    color: rgb(148 163 184) !important; /* slate-400 */
-    font-size: 0.8rem !important;
+.dark .fi-ta-row:hover td {
+    background-color: rgba(51, 65, 85, 0.5) !important;
+}
+.fi-ta-row:hover td {
+    background-color: rgba(241, 245, 249, 0.8) !important;
+}
+
+/* =============================================
+   BADGE STATUS
+   ============================================= */
+.fi-badge-color-success {
+    background-color: rgba(6, 78, 59, 0.4) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(6, 78, 59, 0.6) !important;
+}
+.fi-badge-color-warning {
+    background-color: rgba(120, 53, 15, 0.4) !important;
+    color: #fbbf24 !important;
+    border: 1px solid rgba(120, 53, 15, 0.6) !important;
+}
+.fi-badge-color-danger {
+    background-color: rgba(136, 19, 55, 0.4) !important;
+    color: #fb7185 !important;
+    border: 1px solid rgba(136, 19, 55, 0.6) !important;
+}
+.fi-badge-color-info {
+    background-color: rgba(30, 58, 138, 0.4) !important;
+    color: #93c5fd !important;
+    border: 1px solid rgba(30, 58, 138, 0.6) !important;
+}
+.fi-badge-color-gray {
+    background-color: rgba(51, 65, 85, 0.6) !important;
+    color: #94a3b8 !important;
+    border: 1px solid rgba(51, 65, 85, 0.8) !important;
 }
 
 /* =============================================
    BUTTONS
    ============================================= */
 .fi-btn-color-primary {
-    background-color: rgb(16 185 129) !important; /* emerald-500 */
+    background-color: #10b981 !important;
+    border-color: #10b981 !important;
     color: white !important;
 }
-
 .fi-btn-color-primary:hover {
-    background-color: rgb(5 150 105) !important; /* emerald-600 */
+    background-color: #059669 !important;
+    border-color: #059669 !important;
 }
 
 /* =============================================
    FORM INPUTS
    ============================================= */
-.fi-input {
-    background-color: rgb(30 41 59) !important;
-    border-color: rgb(51 65 85) !important;
-    color: rgb(241 245 249) !important;
+.dark .fi-input,
+.dark .fi-select-input {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
 }
-
-.fi-input:focus {
-    border-color: rgb(52 211 153) !important;
-    box-shadow: 0 0 0 2px rgb(52 211 153 / 0.2) !important;
+.fi-input,
+.fi-select-input {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+.fi-input:focus,
+.fi-select-input:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15) !important;
 }
 
 /* =============================================
-   MODAL / DIALOG
+   MODAL
    ============================================= */
+.dark .fi-modal-window {
+    background-color: #1e293b !important;
+    border: 1px solid #334155 !important;
+}
 .fi-modal-window {
-    background-color: rgb(15 23 42) !important;
-    border: 1px solid rgb(30 41 59) !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+/* =============================================
+   SCROLLBAR
+   ============================================= */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.dark ::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+.dark ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }

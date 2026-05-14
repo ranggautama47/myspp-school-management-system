@@ -18,10 +18,10 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon  = 'heroicon-o-users';
+    protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationLabel = 'Students';
     protected static ?string $navigationGroup = 'Academic';
-    protected static ?int    $navigationSort  = 2;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -117,7 +117,8 @@ class UserResource extends Resource
                 Tables\Columns\ImageColumn::make('image')
                     ->label('')
                     ->circular()
-                    ->defaultImageUrl(fn($record) =>
+                    ->defaultImageUrl(
+                        fn($record) =>
                         'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&background=1D9E75&color=fff'
                     )
                     ->size(36),
@@ -133,10 +134,10 @@ class UserResource extends Resource
                     ->label('Role')
                     ->badge()
                     ->formatStateUsing(fn($state) => ucfirst($state))
-                    ->color(fn($state) => match($state) {
-                        'admin'   => 'warning',
+                    ->color(fn($state) => match ($state) {
+                        'admin' => 'warning',
                         'student' => 'info',
-                        default   => 'gray',
+                        default => 'gray',
                     }),
 
                 Tables\Columns\TextColumn::make('phone')
@@ -198,9 +199,9 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListUsers::route('/'),
+            'index' => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
-            'edit'   => Pages\EditUser::route('/{record}/edit'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
 
