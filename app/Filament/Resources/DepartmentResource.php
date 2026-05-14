@@ -55,11 +55,23 @@ class DepartmentResource extends Resource
 
                     Forms\Components\TextInput::make('cost')
                         ->label('SPP Cost (IDR)')
-                        ->numeric()
                         ->prefix('Rp')
-                        ->minValue(0)
+                        ->placeholder('2.500.000')
                         ->required()
-                        ->placeholder('2500000'),
+                        /** * 1. LOGIKA DINAMIS:
+                         * Menggunakan Alpine.js Mask bawaan Filament. 
+                         * Menghasilkan format 1.000, 10.000, 100.000 secara otomatis saat diketik.
+                         */
+                        ->extraInputAttributes([
+                            'x-mask:dynamic' => '$money($input, ".")',
+                            'inputmode' => 'numeric', // Memaksa keyboard angka muncul di HP
+                        ])
+                        /**
+                         * 2. KEAMANAN DATA:
+                         * 'stripCharacters' akan membuang semua titik sebelum data dikirim ke Database.
+                         * Jadi di DB tetap tersimpan sebagai integer (contoh: 2500000).
+                         */
+                        ->dehydrateStateUsing(fn($state) => (int) preg_replace('/[^0-9]/', '', (string) $state))
                 ])
                 ->columns(2),
         ]);
