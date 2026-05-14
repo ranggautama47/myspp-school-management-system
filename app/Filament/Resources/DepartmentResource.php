@@ -1,0 +1,159 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\DepartmentResource\Pages;
+use App\Models\Department;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+class DepartmentResource extends Resource
+{
+    protected static ?string $model = Department::class;
+
+    protected static ?string $navigationIcon  = 'heroicon-o-building-office-2';
+    protected static ?string $navigationLabel = 'Departments';
+    protected static ?string $navigationGroup = 'Academic';
+    protected static ?int    $navigationSort  = 1;
+
+    // Global search
+    protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name'];
+    }
+
+    // =========================================
+    // FORM
+    // =========================================
+
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            Forms\Components\Section::make('Department Information')
+                ->schema([
+                    Forms\Components\TextInput::make('name')
+                        ->label('Department Name')
+                        ->placeholder('e.g. Teknik Informatika')
+                        ->required()
+                        ->maxLength(255)
+                        ->columnSpanFull(),
+
+                    Forms\Components\TextInput::make('semester')
+                        ->label('Semester')
+                        ->numeric()
+                        ->minValue(1)
+                        ->maxValue(12)
+                        ->required()
+                        ->suffix('semester'),
+
+                    Forms\Components\TextInput::make('cost')
+                        ->label('SPP Cost (IDR)')
+                        ->numeric()
+                        ->prefix('Rp')
+                        ->minValue(0)
+                        ->required()
+                        ->placeholder('2500000'),
+                ])
+                ->columns(2),
+        ]);
+    }
+
+    // =========================================
+    // TABLE
+    // =========================================
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Department Name')
+                    ->searchable()
+                    ->sortable()
+                    ->weight(\Filament\Support\Enums\FontWeight::Medium),
+
+                Tables\Columns\TextColumn::make('semester')
+                    ->label('Semester')
+                    ->badge()
+                    ->color('info')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('cost')
+                    ->label('SPP Cost')
+                    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float)$state, 0, ',', '.'))
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('transactions_count')
+                    ->label('Total Students')
+                    ->counts('transactions')
+                    ->badge()
+                    ->color('success'),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created')
+                    ->date('d M Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\TrashedFilter::make(),
+
+                Tables\Filters\SelectFilter::make('semester')
+                    ->label('Semester')
+                    ->options(
+                        collect(range(1, 12))
+                            ->mapWithKeys(fn($s) => [$s => "Semester {$s}"])
+                            ->toArray()
+                    ),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                ]),
+            ])
+            ->defaultSort('name', 'asc')
+            ->striped();
+    }
+
+    // =========================================
+    // SOFT DELETE QUERY
+    // =========================================
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([SoftDeletingScope::class]);
+    }
+
+    // =========================================
+    // PAGES
+    // =========================================
+
+    public static function getPages(): array
+    {
+        return [
+            'index'  => Pages\ListDepartments::route('/'),
+            'create' => Pages\CreateDepartment::route('/create'),
+            'edit'   => Pages\EditDepartment::route('/{record}/edit'),
+        ];
+    }
+
+    // Badge jumlah di navigation
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+}
