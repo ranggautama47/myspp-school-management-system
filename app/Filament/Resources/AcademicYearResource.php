@@ -62,7 +62,15 @@ class AcademicYearResource extends Resource
                 ->falseColor('slate'),
         ])
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')->label('Only Active'),
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Active Only')
+                    ->placeholder('All')
+                    ->trueLabel('Active')
+                    ->falseLabel('Inactive')
+                    ->queries(
+                        true: fn($query) => $query->where('is_active', true),
+                        false: fn($query) => $query->where('is_active', false),
+                    ),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

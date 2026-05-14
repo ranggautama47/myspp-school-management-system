@@ -80,6 +80,15 @@ class ClassroomResource extends Resource
                     ->relationship('department', 'name'),
                 Tables\Filters\SelectFilter::make('academic_year')
                     ->relationship('academic_year', 'name'),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

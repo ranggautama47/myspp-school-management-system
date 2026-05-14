@@ -21,7 +21,7 @@ class RecentTransactionsWidget extends BaseWidget
     {
         return $table
             ->query(
-                Transaction::query()
+                fn() => Transaction::query()
                     ->with(['user', 'department'])
                     ->latest()
                     ->limit(10)

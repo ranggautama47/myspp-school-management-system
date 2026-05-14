@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
@@ -11,6 +12,11 @@ class CreateUser extends CreateRecord
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    protected function getRedirectBackUrl(): ?string
+    {
+        return null;
     }
 
     protected function getCreatedNotificationTitle(): ?string

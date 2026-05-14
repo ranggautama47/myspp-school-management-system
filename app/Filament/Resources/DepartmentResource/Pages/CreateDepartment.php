@@ -14,6 +14,11 @@ class CreateDepartment extends CreateRecord
         return $this->getResource()::getUrl('index');
     }
 
+    protected function getRedirectBackUrl(): ?string
+    {
+        return null;
+    }
+
     protected function getCreatedNotificationTitle(): ?string
     {
         return 'Department berhasil ditambahkan';

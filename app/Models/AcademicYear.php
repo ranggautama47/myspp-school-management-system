@@ -13,14 +13,10 @@ class AcademicYear extends Model
         'start_date' => 'date',
         'end_date' => 'date',
     ];
-    protected static function booted()
+    public function scopeActive($query)
     {
-        static::saving(function ($academicYear) {
-            if ($academicYear->is_active) {
-                // Deactivate all other years
-                static::where('id', '!=', $academicYear->id)->update(['is_active' => false]);
-            }
-        });
+        return $query->where('is_active', true)
+            ->where('end_date', '>=', now());
     }
 
     public function classrooms()

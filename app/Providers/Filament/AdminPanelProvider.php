@@ -7,6 +7,7 @@ use App\Filament\Widgets\PaymentOverviewWidget;
 use App\Filament\Widgets\PaymentTrendsWidget;
 use App\Filament\Widgets\RecentTransactionsWidget;
 use App\Filament\Widgets\StatsOverviewWidget;
+use Illuminate\Support\Facades\Auth;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -72,7 +73,7 @@ class AdminPanelProvider extends PanelProvider
             // =============================================
             ->userMenuItems([
                 \Filament\Navigation\MenuItem::make()
-                    ->label(fn() => auth()->user()?->name ?? 'Profile')
+                    ->label(fn() => Auth::user()?->name ?? 'Profile')
                     ->icon('heroicon-o-user-circle')
                     ->url(fn() => '#'),
             ])
@@ -148,7 +149,7 @@ class AdminPanelProvider extends PanelProvider
      */
     private function getUserMenuTopbarHtml(): string
     {
-        $user = auth()->user();
+        $user = Auth::user();
         if (!$user)
             return '';
 
