@@ -35,6 +35,11 @@ class Department extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    public function students(): HasMany
+    {
+        return $this->hasMany(Student::class);
+    }
+
     // =========================================
     // SCOPES
     // =========================================

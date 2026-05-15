@@ -102,9 +102,9 @@ class DepartmentResource extends Resource
                     ->formatStateUsing(fn($state) => 'Rp ' . number_format((float) $state, 0, ',', '.'))
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('transactions_count')
+                Tables\Columns\TextColumn::make('students_count')
                     ->label('Total Students')
-                    ->counts('transactions')
+                    ->counts('students')
                     ->badge()
                     ->color('success'),
 

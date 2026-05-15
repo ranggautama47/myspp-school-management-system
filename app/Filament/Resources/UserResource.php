@@ -99,6 +99,9 @@ class UserResource extends Resource
                         ->disk('public')
                         ->acceptedFileTypes(['image/jpeg', 'image/png', 'application/pdf'])
                         ->maxSize(5120)
+                        ->downloadable()
+                        ->openable()
+                        ->previewable(true)
                         ->helperText('Format: JPG, PNG, PDF. Maks 5MB'),
                 ])
                 ->columns(1)
@@ -167,6 +170,7 @@ class UserResource extends Resource
                     ->preload(),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\RestoreAction::make(),
