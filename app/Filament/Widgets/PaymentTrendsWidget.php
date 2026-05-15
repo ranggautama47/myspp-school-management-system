@@ -89,29 +89,4 @@ class PaymentTrendsWidget extends ChartWidget
     {
         return 'line';
     }
-
-    // 4. Menambahkan opsi chart dengan format mata uang Indonesia
-    protected function getOptions(): array
-    {
-        return [
-            'scales' => [
-                'y' => [
-                    'ticks' => [
-                        'callback' => 'function(value) {
-                            return "IDR " + value.toLocaleString("id-ID");
-                        }',
-                    ],
-                ],
-            ],
-            'plugins' => [
-                'tooltip' => [
-                    'callbacks' => [
-                        'label' => 'function(context) {
-                            return "Revenue: IDR " + context.parsed.y.toLocaleString("id-ID");
-                        }',
-                    ],
-                ],
-            ],
-        ];
-    }
 }
