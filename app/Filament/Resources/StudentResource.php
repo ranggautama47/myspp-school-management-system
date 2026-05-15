@@ -30,7 +30,14 @@ class StudentResource extends Resource
                     ->description('Link to user account and basic identity.')
                     ->schema([
                         Forms\Components\Select::make('user_id')
-                            ->relationship('user', 'name')
+                            ->relationship(
+                                'user',
+                                'name',
+                                // Menampilkan hanya user yang belum memiliki record di tabel students
+                                modifyQueryUsing: fn($query) => $query->whereDoesntHave('student')
+                                    ->whereHas('roles', fn($q) => $q->where('name', 'student'))
+                            )
+                            ->label('Select User Account')
                             ->searchable()
                             ->preload()
                             ->required()
@@ -57,37 +64,54 @@ class StudentResource extends Resource
                     ])->columns(2),
 
                 Forms\Components\Section::make('Academic Placement')
-                    ->description('Select classroom. Department and Academic Year will be auto-inherited.')
+                    ->description('Select Academic Year first, then select classroom.')
                     ->schema([
+                        // 2. // GANTI DI SINI: Kita jadikan Academic Year sebagai input SELECT (bukan placeholder)
+                        // Karena di database kamu ada kolom academic_year_id, ini harus diisi agar tersimpan.
+                        Forms\Components\Select::make('academic_year_id')
+                            ->label('Academic Year')
+                            ->relationship('academicYear', 'name')
+                            ->required()
+                            ->live() // Agar saat tahun dipilih, pilihan Classroom di bawah otomatis berubah
+                            ->afterStateUpdated(fn(Forms\Set $set) => $set('classroom_id', null)), // Reset kelas jika tahun diubah
+
                         Forms\Components\Select::make('classroom_id')
                             ->label('Classroom')
-                            ->relationship(
-                                name: 'classroom',
-                                titleAttribute: 'name',
-                                // Hanya tampilkan kelas dari Tahun Ajaran yang Aktif
-                                modifyQueryUsing: fn(Builder $query) => $query->whereHas('academicYear', fn($q) => $q->where('is_active', true))
-                            )
-                            ->searchable()
-                            ->preload()
                             ->required()
-                            ->live() // Memicu re-render UI
+                            ->live()
+                            // 3. // TAMBAHAN LOGIKA: Filter Classroom berdasarkan Academic Year yang dipilih di atas
+                            ->options(function (Forms\Get $get) {
+                                $academicYearId = $get('academic_year_id');
+                                if (!$academicYearId) {
+                                    return []; // Jika tahun belum dipilih, kelas kosong
+                                }
+
+                                // Ambil kelas yang HANYA ada di tahun ajaran tersebut
+                                return \App\Models\Classroom::where('academic_year_id', $academicYearId)
+                                    ->get()
+                                    ->mapWithKeys(function ($classroom) {
+                                        // Menampilkan nama kelas + jurusan agar tidak tertukar (Contoh: TI-1 - Teknik Informatika)
+                                        return [$classroom->id => $classroom->name . ' - ' . ($classroom->department->name ?? '')];
+                                    });
+                            })
                             ->afterStateUpdated(function (Forms\Set $set, ?string $state) {
                                 if (!$state) return;
-                                $classroom = Classroom::with(['department', 'academicYear'])->find($state);
+                                $classroom = \App\Models\Classroom::find($state);
                                 if ($classroom) {
-                                    $set('department_hint', $classroom->department->name ?? '-');
-                                    $set('academic_year_hint', $classroom->academicYear->name ?? '-');
+                                    // 4. // OTOMATIS: Mengisi department_id sesuai kelas yang dipilih
+                                    $set('department_id', $classroom->department_id);
                                 }
                             }),
 
-                        // Dummy placeholders to show operator what will be saved in backend
-                        Forms\Components\Placeholder::make('department_hint')
-                            ->label('Inherited Department')
-                            ->content(fn(Forms\Get $get) => $get('department_hint') ?? 'Will be auto-filled by system.'),
-
-                        Forms\Components\Placeholder::make('academic_year_hint')
-                            ->label('Inherited Academic Year')
-                            ->content(fn(Forms\Get $get) => $get('academic_year_hint') ?? 'Will be auto-filled by system.'),
+                        // 5. // GANTI DI SINI: Department tetap harus ada (karena ada di migration),
+                        // tapi kita buat Disabled (agar admin tidak ubah-ubah manual) namun tetap tersimpan (dehydrated)
+                        Forms\Components\Select::make('department_id')
+                            ->label('Department')
+                            ->relationship('department', 'name')
+                            ->required()
+                            ->disabled()
+                            ->dehydrated() // Penting! Agar data tetap dikirim ke database saat simpan
+                            ->placeholder('Will be auto-filled by system.'),
 
                         Forms\Components\Select::make('status')
                             ->options([
@@ -121,7 +145,7 @@ class StudentResource extends Resource
     {
         return $table
             // Anti N+1 Query: Eager load semua relasi yang ditampilkan
-            ->modifyQueryUsing(fn(Builder $query) => $query->with(['user', 'classroom', 'department', 'academicYear']))
+            ->modifyQueryUsing(fn(Builder $query) => $query->with(['user', 'classroom', 'department', 'academic_year']))
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Student Name')

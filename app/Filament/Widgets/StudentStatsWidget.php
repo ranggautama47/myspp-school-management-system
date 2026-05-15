@@ -18,7 +18,7 @@ class StudentStatsWidget extends BaseWidget
         $newStudentsThisMonth = Student::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->count();
-        $activeClasses = Classroom::whereHas('academicYear', fn($q) => $q->where('is_active', true))->count();
+         $activeClasses = Classroom::whereHas('academic_year', fn($q) => $q->where('is_active', true))->count();
 
         return [
             Stat::make('Total Active Students', number_format($activeStudents))

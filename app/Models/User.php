@@ -48,6 +48,11 @@ class User extends Authenticatable
         return $this->hasMany(Transaction::class);
     }
 
+    public function student()
+    {
+        return $this->hasOne(Student::class);
+    }
+
     // =========================================
     // SCOPES
     // =========================================
