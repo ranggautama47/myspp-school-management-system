@@ -120,7 +120,7 @@ class StudentResource extends Resource
                                 'inactive' => 'Inactive',
                             ])
                             ->default('active')
-                            ->required(),
+                            ->required(), 
                     ])->columns(2),
 
                 Forms\Components\Section::make('Contact & Guardian Info')
