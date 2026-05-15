@@ -89,4 +89,23 @@ class PaymentTrendsWidget extends ChartWidget
     {
         return 'line';
     }
+
+    protected function getOptions(): array
+    {
+        return [
+            'scales' => [
+                'y' => [
+                    'grid' => [
+                        // Gunakan warna abu-abu transparan agar terlihat elegan di Light maupun Dark mode
+                        'color' => 'rgba(148, 163, 184, 0.25)', 
+                    ],
+                ],
+                'x' => [
+                    'grid' => [
+                        'display' => false,
+                    ],
+                ],
+            ],
+        ];
+    }
 }
