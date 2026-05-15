@@ -74,8 +74,8 @@ class PaymentTrendsWidget extends ChartWidget
                 [
                     'label' => 'Revenue (IDR)',
                     'data' => $data->pluck('total')->toArray(),
-                    'borderColor' => '#10B981',
-                    'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
+                    'borderColor' => 'var(--mypp-chart-line)',
+                    'backgroundColor' => 'var(--mypp-chart-fill)',
                     'borderWidth' => 3,
                     'fill' => true,
                     'tension' => 0.4, // Membuat garis grafik melengkung halus (smooth)

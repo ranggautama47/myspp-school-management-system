@@ -84,7 +84,8 @@ class Dashboard extends BaseDashboard
                         'dashboard_start' => $data['startDate'],
                         'dashboard_end' => $data['endDate'],
                     ]);
-                    $this->dispatch('$refresh');
+                    // Only refresh the widgets that depend on date range
+                    $this->dispatch('dateRangeUpdated');
                 })
                 ->modalHeading('Select Date Range')
                 ->modalSubmitActionLabel('Apply')

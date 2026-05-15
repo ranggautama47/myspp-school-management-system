@@ -64,29 +64,29 @@ class AdminPanelProvider extends PanelProvider
             // =============================================
             ->globalSearch(true)
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
-
-            // =============================================
-            // USER MENU — tampilkan nama + role
-            // Filament v3 menggunakan getUserMenuItems untuk
-            // customize menu, tapi untuk nama+role di topbar
-            // kita inject via Blade view custom
-            // =============================================
-            ->userMenuItems([
-                \Filament\Navigation\MenuItem::make()
-                    ->label(fn() => Auth::user()?->name ?? 'Profile')
-                    ->icon('heroicon-o-user-circle')
-                    ->url(fn() => '#'),
-            ])
-
-            // =============================================
-            // RENDER HOOK — inject role subtitle di user menu
-            // Ini yang membuat "Super Administrator" muncul
-            // di bawah nama user di topbar
-            // =============================================
             ->renderHook(
-                \Filament\View\PanelsRenderHook::USER_MENU_BEFORE,
-                fn(): string => $this->getUserMenuTopbarHtml(),
+                \Filament\View\PanelsRenderHook::TOPBAR_START,
+                fn(): string => '
+                    <div id="fi-search-left-placeholder" style="display: flex; align-items: center; flex: 1 1 auto; max-width: 300px; margin-right: 1rem; order: -1;"></div>
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            setTimeout(function() {
+                                const search = document.querySelector(".fi-global-search-field-wrapper");
+                                const placeholder = document.getElementById("fi-search-left-placeholder");
+                                if (search && placeholder) {
+                                    placeholder.appendChild(search);
+                                    search.style.display = "flex";
+                                }
+                            }, 150);
+                        });
+                    </script>
+                ',
             )
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn(): \Illuminate\Contracts\View\View => view('filament.topbar-profile'),
+            )
+
 
 
             // =============================================
@@ -143,50 +143,5 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([Authenticate::class]);
     }
-    /**
-     * Inject HTML nama + role di atas user menu dropdown
-     * Tampil: nama user + role (Super Administrator / Student)
-     */
-    private function getUserMenuTopbarHtml(): string
-    {
-        $user = Auth::user();
-        if (!$user)
-            return '';
 
-        $role = $user->getRoleNames()->first() ?? 'user';
-
-        $roleLabel = match ($role) {
-            'admin' => 'Super Administrator',
-            'student' => 'Student',
-            default => ucfirst($role),
-        };
-
-        // Avatar — foto atau inisial
-        $avatarUrl = $user->image
-            ? \Illuminate\Support\Facades\Storage::url($user->image)
-            : 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=10B981&color=fff&size=64';
-
-        return "
-        <div style='
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            border-bottom: 1px solid rgba(51,65,85,0.5);
-            margin-bottom: 4px;
-        '>
-            <img src='{$avatarUrl}'
-                 style='width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;'
-                 alt='{$user->name}' />
-            <div style='min-width:0;'>
-                <div style='font-size:0.85rem;font-weight:600;color:#F1F5F9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>
-                    {$user->name}
-                </div>
-                <div style='font-size:0.72rem;color:#64748B;margin-top:1px;'>
-                    {$roleLabel}
-                </div>
-            </div>
-        </div>
-        ";
-    }
 }

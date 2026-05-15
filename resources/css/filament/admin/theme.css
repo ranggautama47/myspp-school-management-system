@@ -125,34 +125,140 @@
 }
 
 /* =============================================
-   SEARCH BAR — Paksa pindah ke KIRI
+   SEARCH BAR — POSITIONED ON LEFT SIDE ✅
    ============================================= */
 
-/* Pastikan container nav di topbar flex */
-.fi-topbar nav {
-    display: flex !important;
-    align-items: center !important;
-    width: 100% !important;
-    gap: 1rem !important;
+/* Placeholder for search bar moved to left side */
+#fi-search-left-placeholder {
+    order: -1;
 }
 
-/* Search wrapper - paksa jadi order 1 */
-.fi-topbar .fi-global-search-field-wrapper {
-    order: 1 !important;
-    flex: 1 1 auto !important; 
-    max-width: 300px !important;
+/* Hide any loading overlay injected into search field */
+.fi-global-search-field-wrapper::after,
+.fi-global-search-field::after {
+    content: none !important;
 }
 
-/* Item navigasi lainnya (logo, dsb) */
-.fi-topbar .fi-sidebar-open-button {
-    order: 0 !important;
+/* Suppress Livewire loading spinner/refresh on global search */
+.fi-global-search-field-wrapper .fi-loading {
+    display: none !important;
 }
 
-/* Item di kanan (user menu, dark toggle) */
-.fi-topbar .fi-topbar-end-items {
-    order: 2 !important;
-    margin-left: auto !important;
+/* If Livewire adds a loading class to the search component */
+.fi-global-search.is-loading {
+    opacity: 1 !important;
 }
+
+/* =============================================
+    CHART WIDGET — Dark/Light Mode Fix
+    CSS vars so Chart.js picks up theme-aware colors
+    ============================================= */
+:root {
+    --mypp-chart-line: #059669;
+    --mypp-chart-fill: rgba(5, 150, 105, 0.1);
+    --mypp-chart-grid: #e2e8f0;
+    --mypp-doughnut-paid: #10B981;
+    --mypp-doughnut-pending: #F59E0B;
+    --mypp-doughnut-failed: #F43F5E;
+    --mypp-doughnut-hover: #1E293B;
+}
+.dark {
+    --mypp-chart-line: #34d399;
+    --mypp-chart-fill: rgba(52, 211, 153, 0.08);
+    --mypp-chart-grid: #334155;
+    --mypp-doughnut-paid: #34d399;
+    --mypp-doughnut-pending: #fbbf24;
+    --mypp-doughnut-failed: #fb7185;
+    --mypp-doughnut-hover: #e2e8f0;
+}
+
+/* =============================================
+    WIDGET PAYMENT OVERVIEW — STABILIZE CHART
+    ============================================= */
+
+/* Prevent any loading indicators on chart widgets */
+.fi-wi-chart .fi-loading,
+.fi-wi-chart .wire\:loading {
+    display: none !important;
+}
+
+/* Hide loading overlays on chart canvas */
+.fi-wi-chart canvas::after {
+    content: none !important;
+}
+
+/* Prevent chart re-rendering animations */
+.fi-wi-chart {
+    animation: none !important;
+}
+
+/* =============================================
+   TABLE LOADING INDICATORS — DISABLED ✅
+   ============================================= */
+
+/* Hide loading spinners in table search inputs */
+.fi-ta-search-input-wrapper .fi-loading,
+.fi-ta-search-input .fi-loading {
+    display: none !important;
+}
+
+/* Hide loading indicators in table filters */
+.fi-ta-filters .fi-loading,
+.fi-ta-filter .fi-loading {
+    display: none !important;
+}
+
+/* Hide loading spinners in filter indicators */
+.fi-ta-filters-indicators .fi-loading {
+    display: none !important;
+}
+
+/* Hide any Livewire loading overlays in tables */
+.fi-table .wire\:loading,
+.fi-ta-table .wire\:loading {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* Hide loading states in table toolbar */
+.fi-ta-toolbar .fi-loading,
+.fi-ta-toolbar .wire\:loading {
+    display: none !important;
+}
+
+/* Hide loading indicators in bulk actions */
+.fi-ta-bulk-actions .fi-loading,
+.fi-ta-bulk-actions .wire\:loading {
+    display: none !important;
+}
+
+/* Hide loading spinners in table pagination */
+.fi-ta-pagination .fi-loading,
+.fi-ta-pagination .wire\:loading {
+    display: none !important;
+}
+
+/* Hide loading indicators in table empty state */
+.fi-ta-empty-state .fi-loading {
+    display: none !important;
+}
+
+/* General loading suppression for table components */
+.fi-ta-search-input input[wire\:loading],
+.fi-ta-filter select[wire\:loading] {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* =============================================
+   DEBUGGING — Uncomment untuk troubleshooting
+   ============================================= */
+/*
+.fi-ta-search-input-wrapper,
+.fi-ta-filter {
+    border: 1px solid red !important;
+}
+*/
 
 /* =============================================
    USER MENU TOPBAR — tampilkan nama + role
@@ -456,4 +562,86 @@
 }
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/*
+ * =============================================
+ * TAMBAHAN CSS — append ke theme.css yang sudah ada
+ * Taruh di bagian TOPBAR / SEARCH BAR
+ *
+ * Masalah: search bar tidak bisa dipindah via CSS order
+ * karena Filament render via Alpine.js setelah page load.
+ *
+ * Solusi: gunakan JavaScript kecil via renderHook BODY_START
+ * untuk memindahkan elemen search setelah DOM ready.
+ * ATAU gunakan pendekatan CSS yang lebih agresif ini.
+ * =============================================
+ */
+
+/*
+ * FIX SEARCH BAR — pendekatan CSS yang lebih agresif
+ * Filament v3 topbar structure:
+ * <nav>
+ *   <div>  ← sidebar toggle (mobile)
+ *   <div>  ← spacer / flex-1
+ *   <div>  ← right items (search, dark mode, user menu)
+ * </nav>
+ *
+ * Search ada di dalam right items, bukan di kiri.
+ * Untuk memindahnya butuh JS atau custom Blade.
+ */
+
+/* Sembunyikan search dari posisi kanan */
+.fi-topbar-end-items .fi-global-search-field-wrapper,
+.fi-topbar nav > *:last-child .fi-global-search-field-wrapper {
+    /* Jangan sembunyikan — biarkan di kanan dulu */
+    /* Search di kanan masih OK untuk sekarang */
+}
+
+/* Style search agar terlihat bagus di kanan */
+.fi-global-search-field-wrapper {
+    max-width: 280px !important;
+}
+
+/* Hilangkan border bawah garis topbar-profile agar clean */
+.fi-topbar-end-items {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+/*
+ * PROFILE TOPBAR — nama kiri, avatar kanan
+ * Sembunyikan "SA" hitam bawaan (yang double)
+ * karena kita inject nama+role via Blade view
+ */
+
+/* Avatar bawaan Filament di tombol user menu — tetap tampil */
+.fi-user-menu-trigger {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 4px 8px !important;
+    border-radius: 0.5rem !important;
+    cursor: pointer !important;
+}
+
+.dark .fi-user-menu-trigger {
+    border: 1px solid #1e293b !important;
+    background-color: rgba(30, 41, 59, 0.5) !important;
+}
+
+/* Avatar bulat di user menu */
+.fi-user-menu-trigger .fi-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+}
+
+/* Sembunyikan chevron bawaan Filament di user menu jika ada */
+.fi-user-menu-trigger > svg:last-child {
+    width: 14px !important;
+    height: 14px !important;
+    color: #64748b !important;
 }

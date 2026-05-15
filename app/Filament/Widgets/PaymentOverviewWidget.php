@@ -9,15 +9,27 @@ use Illuminate\Contracts\Support\Htmlable;
 
 class PaymentOverviewWidget extends ChartWidget
 {
+    // ISOLASI TOTAL: Prevent widget from any Livewire events that could trigger refresh
+    protected $listeners = [];
+
     protected static ?int $sort = 3;
-
     protected static ?string $heading = 'Payment Overview';
-
-    // Fix: dihapus karena sering menyebabkan resize loop (kedutan) pada doughnut chart
-
+    protected static ?string $maxHeight = '380px';
     protected int|string|array $columnSpan = 1;
 
+    // FIX: Override polling to ensure no automatic refresh
     protected static ?string $pollingInterval = null;
+
+    // Ensure widget only renders once and stays stable
+    protected function shouldRender(): bool
+    {
+        return true;
+    }
+
+    public static function canView(): bool
+    {
+        return true;
+    }
 
     public function getDescription(): string|Htmlable|null
     {
@@ -46,11 +58,15 @@ class PaymentOverviewWidget extends ChartWidget
             'datasets' => [
                 [
                     'data' => [$paid, $pending, $failed],
-                    'backgroundColor' => ['#10B981', '#F59E0B', '#F43F5E'],
+                    'backgroundColor' => [
+                        'var(--mypp-doughnut-paid)',
+                        'var(--mypp-doughnut-pending)',
+                        'var(--mypp-doughnut-failed)',
+                    ],
                     'borderWidth' => 0,
                     'hoverOffset' => 8,
                     'hoverBorderWidth' => 2,
-                    'hoverBorderColor' => '#1E293B',
+                    'hoverBorderColor' => 'var(--mypp-doughnut-hover)',
                 ],
             ],
             'labels' => [
@@ -91,13 +107,11 @@ class PaymentOverviewWidget extends ChartWidget
             'cutout' => '65%',
             'maintainAspectRatio' => false,
             'responsive' => true,
-
-            // Layout padding — beri ruang ekstra bawah untuk legend
-            'layout' => [
-                'padding' => [
-                    'bottom' => 8,
-                ],
-            ],
+            'layout' => ['padding' => ['bottom' => 8]],
+            // FIX: Disable animations to prevent re-rendering loops
+            'animation' => false,
+            'animations' => false,
         ];
     }
+
 }
