@@ -235,12 +235,37 @@
 }
 
 /* =============================================
-   WIDGET PAYMENT OVERVIEW — fix overflow/terpotong
-   ============================================= */
+    WIDGET PAYMENT OVERVIEW — STABILIZE CHART
+    ============================================= */
 
-/* Pastikan container chart tidak clip content */
+/* Prevent any loading indicators on chart widgets */
+.fi-wi-chart .fi-loading,
+.fi-wi-chart .wire\:loading {
+    display: none !important;
+}
+
+/* Hide loading overlays on chart canvas */
+.fi-wi-chart canvas::after {
+    content: none !important;
+}
+
+/* Prevent chart re-rendering animations */
 .fi-wi-chart {
-    overflow: visible !important;
+    animation: none !important;
+}
+
+/* =============================================
+    PAYMENT TRENDS WIDGET — FIX GRID LINES DARK MODE
+    ============================================= */
+
+/* Override grid color element untuk semua chart widgets di dark mode */
+.dark [x-ref="gridColorElement"] {
+    color: #9ca3af !important; /* gray-400 - putih terang untuk grid lines */
+}
+
+/* Override text color element untuk semua chart widgets di dark mode */
+.dark [x-ref="textColorElement"] {
+    color: #d1d5db !important; /* gray-300 - untuk legend dan labels */
 }
 
 /* Canvas chart — beri ruang bawah untuk legend */
