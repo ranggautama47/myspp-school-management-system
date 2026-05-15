@@ -58,15 +58,11 @@ class PaymentOverviewWidget extends ChartWidget
             'datasets' => [
                 [
                     'data' => [$paid, $pending, $failed],
-                    'backgroundColor' => [
-                        'var(--mypp-doughnut-paid)',
-                        'var(--mypp-doughnut-pending)',
-                        'var(--mypp-doughnut-failed)',
-                    ],
+                    'backgroundColor' => ['#10B981', '#F59E0B', '#F43F5E'],
                     'borderWidth' => 0,
                     'hoverOffset' => 8,
                     'hoverBorderWidth' => 2,
-                    'hoverBorderColor' => 'var(--mypp-doughnut-hover)',
+                    'hoverBorderColor' => '#1E293B',
                 ],
             ],
             'labels' => [
