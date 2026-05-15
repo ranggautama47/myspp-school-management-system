@@ -3,23 +3,27 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StudentResource\Pages;
-use App\Models\Student;
 use App\Models\Classroom;
+use App\Models\Student;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Support\Colors\Color;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 
 class StudentResource extends Resource
 {
     protected static ?string $model = Student::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
+
     protected static ?string $navigationGroup = 'Academic';
+
     protected static ?int $navigationSort = 1;
+
     protected static ?string $recordTitleAttribute = 'nis';
 
     public static function form(Form $form): Form
@@ -34,8 +38,16 @@ class StudentResource extends Resource
                                 'user',
                                 'name',
                                 // Menampilkan hanya user yang belum memiliki record di tabel students
-                                modifyQueryUsing: fn($query) => $query->whereDoesntHave('student')
-                                    ->whereHas('roles', fn($q) => $q->where('name', 'student'))
+                                modifyQueryUsing: function ($query, $operation, $record) {
+                                    // Jika sedang VIEW atau EDIT, kita harus pastikan user yang sudah terpilih tetap muncul
+                                    if ($operation === 'view' || $operation === 'edit') {
+                                        return $query;
+                                    }
+
+                                    // Jika sedang CREATE, baru kita filter hanya student yang belum punya record
+                                    return $query->whereHas('roles', fn($q) => $q->where('name', 'student'))
+                                        ->whereDoesntHave('student');
+                                }
                             )
                             ->label('Select User Account')
                             ->searchable()
@@ -82,12 +94,12 @@ class StudentResource extends Resource
                             // 3. // TAMBAHAN LOGIKA: Filter Classroom berdasarkan Academic Year yang dipilih di atas
                             ->options(function (Forms\Get $get) {
                                 $academicYearId = $get('academic_year_id');
-                                if (!$academicYearId) {
+                                if (! $academicYearId) {
                                     return []; // Jika tahun belum dipilih, kelas kosong
                                 }
 
                                 // Ambil kelas yang HANYA ada di tahun ajaran tersebut
-                                return \App\Models\Classroom::where('academic_year_id', $academicYearId)
+                                return Classroom::where('academic_year_id', $academicYearId)
                                     ->get()
                                     ->mapWithKeys(function ($classroom) {
                                         // Menampilkan nama kelas + jurusan agar tidak tertukar (Contoh: TI-1 - Teknik Informatika)
@@ -95,8 +107,10 @@ class StudentResource extends Resource
                                     });
                             })
                             ->afterStateUpdated(function (Forms\Set $set, ?string $state) {
-                                if (!$state) return;
-                                $classroom = \App\Models\Classroom::find($state);
+                                if (! $state) {
+                                    return;
+                                }
+                                $classroom = Classroom::find($state);
                                 if ($classroom) {
                                     // 4. // OTOMATIS: Mengisi department_id sesuai kelas yang dipilih
                                     $set('department_id', $classroom->department_id);
@@ -120,7 +134,7 @@ class StudentResource extends Resource
                                 'inactive' => 'Inactive',
                             ])
                             ->default('active')
-                            ->required(), 
+                            ->required(),
                     ])->columns(2),
 
                 Forms\Components\Section::make('Contact & Guardian Info')
@@ -145,7 +159,7 @@ class StudentResource extends Resource
     {
         return $table
             // Anti N+1 Query: Eager load semua relasi yang ditampilkan
-            ->modifyQueryUsing(fn(Builder $query) => $query->with(['user', 'classroom', 'department', 'academic_year']))
+            ->modifyQueryUsing(fn(Builder $query) => $query->with(['user', 'classroom', 'department', 'academicYear']))
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Student Name')
@@ -204,6 +218,53 @@ class StudentResource extends Resource
                 ]),
             ])
             ->striped();
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make('Student Information')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('user.name')
+                            ->label('Student Name')
+                            ->weight('bold')
+                            ->color('primary'),
+                        Infolists\Components\TextEntry::make('nis')
+                            ->label('NIS'),
+                        Infolists\Components\TextEntry::make('gender')
+                            ->badge(),
+                        Infolists\Components\TextEntry::make('birth_date')
+                            ->date(),
+                    ])->columns(2),
+
+                Infolists\Components\Section::make('Academic Detail')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('classroom.name')
+                            ->label('Classroom'),
+                        Infolists\Components\TextEntry::make('department.name')
+                            ->label('Department'),
+                        Infolists\Components\TextEntry::make('academicYear.name')
+                            ->label('Academic Year'),
+                        Infolists\Components\TextEntry::make('status')
+                            ->badge(),
+                    ])->columns(2),
+
+                Infolists\Components\Section::make('Contact & Guardian Info')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('phone')
+                            ->label('Phone')
+                            ->placeholder('Not provided'),
+                        Infolists\Components\TextEntry::make('parent_name')
+                            ->label('Parent Name'),
+                        Infolists\Components\TextEntry::make('parent_phone')
+                            ->label('Parent Phone'),
+                        Infolists\Components\TextEntry::make('address')
+                            ->label('Address')
+                            ->columnSpanFull()
+                            ->placeholder('Not provided'),
+                    ])->columns(2),
+            ]);
     }
 
     public static function getRelations(): array
