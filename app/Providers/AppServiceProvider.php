@@ -7,6 +7,8 @@ use App\Observers\TransactionObserver;
 use App\Policies\TransactionPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use App\Policies\RolePolicy;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,5 +32,10 @@ class AppServiceProvider extends ServiceProvider
         // =========================================
 
         Gate::policy(Transaction::class, TransactionPolicy::class);
+
+        // =========================================
+        // Daftarkan Policy untuk Role
+        // =========================================
+        Gate::policy(Role::class, RolePolicy::class);
     }
 }
