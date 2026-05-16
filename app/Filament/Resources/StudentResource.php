@@ -175,6 +175,14 @@ class StudentResource extends Resource
                     ->label('Class')
                     ->sortable()
                     ->searchable(),
+                    
+                Tables\Columns\TextColumn::make('department.semester')
+                    ->label('Semester')
+                    ->formatStateUsing(fn($state) => "Semester {$state}") // Biar tampil "Semester 3", bukan cuma "3"
+                    ->badge() // Dibuat bentuk badge/label agar rapi seperti status
+                    ->color('gray')
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('department.name')
                     ->label('Department')
                     ->sortable()
