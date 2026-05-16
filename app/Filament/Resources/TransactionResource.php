@@ -17,6 +17,12 @@ class TransactionResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationGroup = 'Finance';
 
+    protected static ?string $navigationLabel = 'Payments';
+
+    protected static ?string $modelLabel = 'Payment';
+
+    protected static ?string $pluralModelLabel = 'Payments';
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
@@ -34,7 +40,16 @@ class TransactionResource extends Resource
                             ->relationship('user', 'name')
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                $student = \App\Models\Student::where('user_id', $state)->first();
+                                if ($student && $student->department) {
+                                    $set('department_id', $student->department_id);
+                                    // Isi otomatis amount-nya
+                                    $set('amount', $student->department->cost);
+                                }
+                            }),
 
                         Forms\Components\Select::make('department_id')
                             ->relationship('department', 'name')
@@ -63,7 +78,12 @@ class TransactionResource extends Resource
 
                         Forms\Components\FileUpload::make('proof_of_payment')
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'application/pdf'])
-                            ->directory('proofs'),
+                            ->directory('proofs')
+                            ->disk('public')
+                            ->downloadable()
+                            ->openable()
+                            ->previewable(true)
+                            ->columnSpanFull(),
                     ])->columns(2),
             ]);
     }
@@ -71,6 +91,7 @@ class TransactionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->with(['department', 'user']))
             ->columns([
                 Tables\Columns\TextColumn::make('code')
                     ->label('Code')
@@ -84,13 +105,14 @@ class TransactionResource extends Resource
 
                 Tables\Columns\TextColumn::make('department.name')
                     ->label('Department')
-                    ->searchable()
-                    ->sortable(),
+                    ->description(fn($record) => "Semester " . $record->department->semester),
 
-                Tables\Columns\TextColumn::make('department.cost')
+                Tables\Columns\TextColumn::make('amount') // Ambil dari transaksi, bukan department.cost
                     ->label('Amount (IDR)')
-                    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float) $state, 2, ',', '.'))
-                    ->sortable(),
+                    ->money('IDR', locale: 'id') // Gunakan helper bawaan Filament agar rapi
+                    ->weight('bold')
+                    ->color('emerald'),
+                // ->sortable(), // Dimatikan sementara untuk mencegah JS Error pada relasi
 
                 Tables\Columns\TextColumn::make('payment_status')
                     ->label('Status')
@@ -112,6 +134,21 @@ class TransactionResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('approve')
+                    ->label('Approve')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Approve Payment')
+                    ->modalDescription('Are you sure you want to approve this payment? This action cannot be undone.')
+                    ->visible(fn(Transaction $record) => $record->payment_status === TransactionStatus::Pending)
+                    ->action(function (Transaction $record) {
+                        $record->update([
+                            'payment_status' => TransactionStatus::Paid,
+                            'paid_at' => now(),
+                        ]);
+                    }),
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

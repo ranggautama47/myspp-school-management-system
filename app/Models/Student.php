@@ -34,13 +34,13 @@ class Student extends Model
         static::saving(function ($student) {
             // 1. Auto-Inherit Department & Academic Year dari Classroom
             if ($student->classroom_id) {
-                $classroom = Classroom::find($student->classroom_id);
+                $classroom = $student->classroom;
+
                 if ($classroom) {
                     $student->department_id = $classroom->department_id;
                     $student->academic_year_id = $classroom->academic_year_id;
                 }
             }
-
             // 2. Validasi Kapasitas Kelas (Classroom Capacity Check)
             if ($student->isDirty('classroom_id') && $student->status === 'active') {
                 $classroom = Classroom::find($student->classroom_id);

@@ -31,7 +31,8 @@ class RecentTransactionsWidget extends BaseWidget
                 Tables\Columns\ImageColumn::make('user.image')
                     ->label('')
                     ->circular()
-                    ->defaultImageUrl(fn($record) =>
+                    ->defaultImageUrl(
+                        fn($record) =>
                         'https://ui-avatars.com/api/?name=' . urlencode($record->user?->name ?? 'U') . '&background=1D9E75&color=fff'
                     )
                     ->size(36),
@@ -47,15 +48,16 @@ class RecentTransactionsWidget extends BaseWidget
                     ->label('Department')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('department.cost')
+                Tables\Columns\TextColumn::make('amount') // Pastikan konsisten menggunakan 'amount'
                     ->label('Amount (IDR)')
-                    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float)$state, 2, ',', '.'))
-                    ->sortable(),
+                    ->formatStateUsing(fn($state) => 'Rp ' . number_format($state, 0, ',', '.')) // 0 desimal agar sama dengan dashboard
+                    ->color('emerald'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Due Date')
                     ->date('M d, Y')
-                    ->color(fn($record) =>
+                    ->color(
+                        fn($record) =>
                         $record->payment_status === TransactionStatus::Expired ? 'danger' : null
                     )
                     ->sortable(),
