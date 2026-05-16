@@ -1,222 +1,393 @@
-# SPP School Management System - Payment Amount Issue Fix
+<div align="center">
 
-## Problem Description
+<h1>🏫 MySPP — School Management System</h1>
 
-The **Amount (IDR)** column in the Payments list page was displaying static values instead of dynamic values from the database. The amount should reflect the actual cost from each transaction's associated department, but it was showing fixed/static data.
+<p>Platform manajemen sekolah berbasis web, lengkap dengan sistem pembayaran SPP terintegrasi Midtrans</p>
 
-## Root Cause Analysis
+![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![Filament](https://img.shields.io/badge/Filament-v3-FFC107?style=for-the-badge&logo=filament&logoColor=black)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Midtrans](https://img.shields.io/badge/Midtrans-Payment-003D7A?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-The issue occurred because:
+<br/>
 
-1. **Missing Eager Loading**: The `department` relationship was not being loaded with the transaction queries, causing `department.cost` to fail or return null.
+[🚀 Live Demo](#) · [📖 Dokumentasi](#) · [🐛 Report Bug](issues) · [✨ Request Feature](issues)
 
-2. **Tab Filtering Issues**: When filtering transactions by status (Pending, Paid, Expired), the tab queries weren't including the necessary eager loading.
+<br/>
 
-3. **JavaScript Errors**: The `sortable()` configuration on relationship columns was causing async JavaScript errors due to improper query handling.
+> **Portfolio Project** — Full-stack Web App untuk manajemen sekolah/yayasan  
+> mencakup CRUD admin panel, role management, hingga payment gateway terintegrasi.
 
-## Files Affected
+</div>
 
-### Core Resource Files
-- `app/Filament/Resources/TransactionResource.php`
-- `app/Filament/Resources/TransactionResource/Pages/ListTransactions.php`
+---
 
-### Widget Files
-- `app/Filament/Widgets/RecentTransactionsWidget.php`
+## 📋 Daftar Isi
 
-### Model Files
-- `app/Models/Transaction.php`
-- `app/Models/Department.php`
-- `app/Models/User.php`
-- `app/Models/Student.php`
+- [Tentang Project](#-tentang-project)
+- [Fitur Utama](#-fitur-utama)
+- [Tech Stack](#-tech-stack)
+- [ERD Database](#-erd-database)
+- [Instalasi](#-instalasi)
+- [Konfigurasi](#-konfigurasi)
+- [Penggunaan](#-penggunaan)
+- [API Endpoints](#-api-endpoints)
+- [Screenshots](#-screenshots)
+- [Roadmap](#-roadmap)
+- [Kontribusi](#-kontribusi)
+- [Lisensi](#-lisensi)
 
-## Solution Implemented
+---
 
-### 1. Added Eager Loading to Main Transaction Table
+## 🎯 Tentang Project
 
-**File**: `app/Filament/Resources/TransactionResource.php`
+**MySPP** adalah aplikasi web School Management System yang dirancang untuk memudahkan pengelolaan administrasi sekolah, khususnya pembayaran SPP. Dibangun menggunakan **Laravel 12** dengan admin panel **Filament v3** dan integrasi payment gateway **Midtrans**.
 
-```php
-public static function table(Table $table): Table
-{
-    return $table
-        ->modifyQueryUsing(fn ($query) => $query->with(['department', 'user']))
-        ->columns([
-            // ... other columns
-            Tables\Columns\TextColumn::make('department.cost')
-                ->label('Amount (IDR)')
-                ->formatStateUsing(fn($state) => 'Rp ' . number_format((float) $state, 2, ',', '.')),
-            // ... other columns
-        ]);
-}
+### Target Pengguna
+
+- 🏫 Sekolah swasta (SMP, SMA, SMK)
+- 🕌 Pesantren & yayasan pendidikan
+- 🎓 Lembaga kursus & pelatihan
+
+### Highlights
+
+- ✅ CMS Admin lengkap berbasis Filament v3
+- ✅ Multi-role: Admin & Siswa via Spatie Permission
+- ✅ Payment gateway Midtrans (QRIS, GoPay, OVO, Transfer Bank)
+- ✅ REST API siap pakai
+- ✅ Export laporan PDF & Excel
+- ✅ Notifikasi email otomatis
+
+---
+
+## ✨ Fitur Utama
+
+### 👨‍💼 CMS Admin Panel
+
+| Fitur                          | Status              |
+| ------------------------------ | ------------------- |
+| Manajemen Jurusan/Kelas (CRUD) | ✅ Selesai          |
+| Manajemen Data Siswa & Admin   | ✅ Selesai          |
+| Buat & kelola tagihan SPP      | ✅ Selesai          |
+| Approve / reject pembayaran    | ✅ Selesai          |
+| Dashboard analytics & grafik   | ✅ Selesai          |
+| Laporan keuangan per periode   | 🔄 Dalam pengerjaan |
+| Export PDF & Excel             | 🔄 Dalam pengerjaan |
+| Role & Permission management   | ✅ Selesai          |
+
+### 🎓 Portal Siswa
+
+| Fitur                          | Status              |
+| ------------------------------ | ------------------- |
+| Register & lengkapi biodata    | ✅ Selesai          |
+| Upload scan ijazah & foto      | ✅ Selesai          |
+| Dashboard status tagihan       | ✅ Selesai          |
+| Bayar SPP via Midtrans Snap    | 🔄 Dalam pengerjaan |
+| Upload bukti pembayaran manual | ✅ Selesai          |
+| Riwayat transaksi              | ✅ Selesai          |
+| Notifikasi status pembayaran   | 📋 Direncanakan     |
+
+### 💳 Payment Gateway (Midtrans)
+
+| Metode             | Status              |
+| ------------------ | ------------------- |
+| QRIS               | 🔄 Dalam pengerjaan |
+| GoPay / OVO        | 🔄 Dalam pengerjaan |
+| Transfer Bank (VA) | 🔄 Dalam pengerjaan |
+| Kartu Kredit       | 📋 Direncanakan     |
+| Webhook otomatis   | 🔄 Dalam pengerjaan |
+
+---
+
+## 🛠 Tech Stack
+
+### Backend
+
+```
+Laravel 12          — PHP Framework
+PHP 8.3             — Bahasa pemrograman
+MySQL 8.0           — Database
+Laravel Sanctum     — API Authentication
+Spatie Permission   — Role & Permission Management
 ```
 
-### 2. Updated Tab Queries in ListTransactions
+### Admin Panel
 
-**File**: `app/Filament/Resources/TransactionResource/Pages/ListTransactions.php`
-
-```php
-public function getTabs(): array
-{
-    return [
-        'all' => \Filament\Resources\Components\Tab::make('All')
-            ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['department', 'user'])),
-        'pending' => \Filament\Resources\Components\Tab::make('Pending')
-            ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['department', 'user'])->where('payment_status', \App\Enums\TransactionStatus::Pending)),
-        'paid' => \Filament\Resources\Components\Tab::make('Paid')
-            ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['department', 'user'])->where('payment_status', \App\Enums\TransactionStatus::Paid)),
-        'expired' => \Filament\Resources\Components\Tab::make('Expired')
-            ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['department', 'user'])->where('payment_status', \App\Enums\TransactionStatus::Expired)),
-    ];
-}
+```
+Filament v3         — Admin panel framework
+Livewire            — Reactive UI components
+Alpine.js           — Lightweight JS interactions
+Tailwind CSS        — Utility-first CSS
 ```
 
-### 3. Fixed JavaScript Errors
+### Payment & Integrasi
 
-Removed `->sortable()` from `department.cost` columns to prevent async JavaScript errors:
-
-**TransactionResource.php** and **RecentTransactionsWidget.php**:
-```php
-Tables\Columns\TextColumn::make('department.cost')
-    ->label('Amount (IDR)')
-    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float) $state, 2, ',', '.'))
-    // ->sortable(), // Removed to prevent JS errors
+```
+Midtrans Snap       — Payment gateway (sandbox & production)
+DomPDF              — Generate PDF kwitansi & laporan
+Laravel Excel       — Export data ke Excel
+Laravel Queue       — Background jobs (notifikasi, email)
+Resend / Mailtrap   — Email notification service
 ```
 
-## Database Structure
+### DevOps & Deployment
 
-### Transactions Table
-```sql
-CREATE TABLE transactions (
-    id BIGINT PRIMARY KEY,
-    code VARCHAR(255),
-    user_id BIGINT,
-    department_id BIGINT,
-    payment_method VARCHAR(255),
-    payment_status ENUM('pending', 'paid', 'expired'),
-    -- ... other fields
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (department_id) REFERENCES departments(id)
-);
+```
+Railway / Render    — App hosting (gratis)
+PlanetScale         — MySQL cloud database (gratis)
+Cloudinary          — File & image storage (gratis)
+GitHub Actions      — CI/CD pipeline
 ```
 
-### Departments Table
-```sql
-CREATE TABLE departments (
-    id BIGINT PRIMARY KEY,
-    name VARCHAR(255),
-    cost DECIMAL(15,2), -- This is the dynamic amount that should be displayed
-    semester INT,
-    -- ... other fields
-);
+---
+
+## 🗄 ERD Database
+
+```
+users               — Data siswa dan admin (dibedakan via role)
+roles               — Admin, Student (Spatie)
+permissions         — Hak akses per role
+model_has_roles     — Pivot: users ↔ roles
+role_has_permissions— Pivot: roles ↔ permissions
+departments         — Jurusan/kelas + biaya SPP per semester
+transactions        — Tagihan SPP + status pembayaran Midtrans
+payment_logs        — Log webhook Midtrans untuk audit trail
 ```
 
-## Model Relationships
+> Lihat diagram lengkap di [/docs/erd.png](docs/erd.png)
 
-### Transaction Model
-```php
-class Transaction extends Model
-{
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
+---
 
-    public function department(): BelongsTo
-    {
-        return $this->belongsTo(Department::class);
-    }
-}
-```
+## 🚀 Instalasi
 
-### Department Model
-```php
-class Department extends Model
-{
-    protected $fillable = ['name', 'semester', 'cost'];
+### Requirements
 
-    protected function casts(): array
-    {
-        return [
-            'cost' => 'decimal:2',
-        ];
-    }
-}
-```
+- PHP >= 8.3
+- Composer >= 2.x
+- MySQL >= 8.0 atau PlanetScale
+- Node.js >= 20.x
 
-## Testing
+### Langkah Instalasi
 
-### Verify the Fix
+**1. Clone repository**
 
-1. **Check Database Data**:
 ```bash
-php artisan tinker
->>> \App\Models\Department::select('name', 'cost')->get()
+git clone https://github.com/username/myspp.git
+cd myspp
 ```
 
-2. **Test Transaction Query**:
+**2. Install dependencies**
+
 ```bash
-php artisan tinker
->>> \App\Models\Transaction::with('department')->first()->department->cost
+composer install
+npm install && npm run build
 ```
 
-3. **Access the Admin Panel**:
-   - Go to `/admin/transactions`
-   - Verify that Amount (IDR) shows different values based on department costs
-   - Test all tabs: All, Pending, Paid, Expired
+**3. Setup environment**
 
-## Expected Results
-
-After implementing the fix:
-
-- ✅ Amount (IDR) column shows dynamic values from database
-- ✅ Different departments show different amounts
-- ✅ No JavaScript console errors
-- ✅ All transaction tabs work properly
-- ✅ Recent Transactions widget displays correct amounts
-
-## Sample Data Verification
-
-```php
-// Example departments with different costs
-Department::create(['name' => 'Teknik Informatika', 'cost' => 2500000.00]);
-Department::create(['name' => 'Akuntansi', 'cost' => 2000000.00]);
-Department::create(['name' => 'Manajemen', 'cost' => 2200000.00]);
-
-// Transactions should show corresponding department costs
-Transaction::where('department_id', 1)->get(); // Should show Rp 2.500.000
-Transaction::where('department_id', 2)->get(); // Should show Rp 2.000.000
-```
-
-## Troubleshooting
-
-### If Amounts Still Show as Static:
-
-1. **Clear Laravel Caches**:
 ```bash
-php artisan view:clear
-php artisan config:clear
-php artisan cache:clear
+cp .env.example .env
+php artisan key:generate
 ```
 
-2. **Hard Refresh Browser**:
-   - Press `Ctrl+F5` (Windows/Linux) or `Cmd+Shift+R` (Mac)
+**4. Konfigurasi database di `.env`**
 
-3. **Check Database Relationships**:
-   - Ensure all transactions have valid `department_id`
-   - Verify departments have `cost` values
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=myspp
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-### If JavaScript Errors Persist:
+**5. Jalankan migration & seeder**
 
-- The `sortable()` has been removed from relationship columns
-- If sorting is needed, implement with proper joins
+```bash
+php artisan migrate --seed
+```
 
-## Future Improvements
+**6. Storage link & jalankan server**
 
-1. **Add Sorting**: Implement proper sorting for department.cost with database joins
-2. **Performance**: Consider adding database indexes on frequently queried columns
-3. **Caching**: Implement proper caching strategies for better performance
+```bash
+php artisan storage:link
+php artisan serve
+```
 
-## Conclusion
+Akses aplikasi di `http://localhost:8000`
 
-The Amount (IDR) column now displays dynamic values from the database instead of static data. The fix involved adding proper eager loading to all transaction queries and resolving JavaScript errors caused by improper sorting configuration on relationship columns.</content>
-<parameter name="filePath">README_PAYMENT_AMOUNT_FIX.md
+---
+
+## ⚙️ Konfigurasi
+
+### Midtrans (Payment Gateway)
+
+Daftar di [midtrans.com](https://midtrans.com) lalu isi di `.env`:
+
+```env
+MIDTRANS_SERVER_KEY=SB-Mid-server-xxxxxxxxxxxx
+MIDTRANS_CLIENT_KEY=SB-Mid-client-xxxxxxxxxxxx
+MIDTRANS_IS_PRODUCTION=false
+MIDTRANS_IS_SANITIZED=true
+MIDTRANS_IS_3DS=true
+```
+
+### Email Notifikasi (Resend)
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.resend.com
+MAIL_PORT=465
+MAIL_USERNAME=resend
+MAIL_PASSWORD=re_xxxxxxxxxxxx
+MAIL_FROM_ADDRESS=noreply@yourdomain.com
+MAIL_FROM_NAME="MySPP"
+```
+
+### Cloudinary (File Storage)
+
+```env
+CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
+```
+
+---
+
+## 📖 Penggunaan
+
+### Default Akun Seeder
+
+| Role    | Email             | Password |
+| ------- | ----------------- | -------- |
+| Admin   | admin@myspp.com   | password |
+| Student | student@myspp.com | password |
+
+### Akses Admin Panel
+
+```
+http://localhost:8000/admin
+```
+
+### Akses Portal Siswa
+
+```
+http://localhost:8000/
+```
+
+---
+
+## 🔌 API Endpoints
+
+Base URL: `http://localhost:8000/api`
+
+### Auth
+
+```http
+POST   /api/auth/login
+POST   /api/auth/register
+POST   /api/auth/logout
+GET    /api/auth/me
+```
+
+### Departments
+
+```http
+GET    /api/departments
+GET    /api/departments/{id}
+POST   /api/departments          [Admin]
+PUT    /api/departments/{id}     [Admin]
+DELETE /api/departments/{id}     [Admin]
+```
+
+### Transactions
+
+```http
+GET    /api/transactions                  [Admin: semua | Student: milik sendiri]
+GET    /api/transactions/{id}
+POST   /api/transactions                  [Admin]
+POST   /api/transactions/{id}/pay        [Student]
+POST   /api/transactions/{id}/approve    [Admin]
+```
+
+### Midtrans
+
+```http
+POST   /api/midtrans/snap-token          — Generate Snap token
+POST   /api/midtrans/webhook             — Terima notifikasi Midtrans
+```
+
+> Semua endpoint (kecuali auth) membutuhkan header:  
+> `Authorization: Bearer {token}`
+
+---
+
+## 📸 Screenshots
+
+| Admin Dashboard | Manajemen Transaksi |
+| :-------------: | :-----------------: |
+| _[screenshot]_  |   _[screenshot]_    |
+
+|  Portal Siswa  | Pembayaran Midtrans |
+| :------------: | :-----------------: |
+| _[screenshot]_ |   _[screenshot]_    |
+
+---
+
+## 📍 Roadmap
+
+- [x] Setup Laravel 12 + Filament v3
+- [x] CRUD Departments, Users, Transactions
+- [x] Spatie Role & Permission (Admin & Student)
+- [x] Portal siswa (register, biodata, dashboard)
+- [ ] Integrasi Midtrans Snap + Webhook
+- [ ] Notifikasi email otomatis
+- [ ] Export PDF kwitansi & laporan Excel
+- [ ] REST API lengkap + dokumentasi Postman
+- [ ] Feature test (PHPUnit)
+- [ ] Fitur diskon / beasiswa / cicilan
+- [ ] Multi tahun ajaran
+
+---
+
+## 🤝 Kontribusi
+
+Pull request sangat diterima! Untuk perubahan besar, buka issue terlebih dahulu.
+
+```bash
+# Fork repo ini
+# Buat branch baru
+git checkout -b feature/nama-fitur
+
+# Commit perubahan
+git commit -m "feat: tambah fitur xyz"
+
+# Push ke branch
+git push origin feature/nama-fitur
+
+# Buat Pull Request
+```
+
+---
+
+## 👨‍💻 Developer
+
+**ranggautama**  
+Full-stack Web Developer · Laravel Enthusiast
+
+[![GitHub](https://img.shields.io/badge/GitHub-@ranggautama47-181717?style=flat&logo=github)](https://github.com/ranggautama47)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-ranggautama-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/in/rangga-utama-6bb76b362/)
+[![Portfolio](https://img.shields.io/badge/Portfolio-webkamu.com-FF5722?style=flat)](https://webkamu.com)
+
+---
+
+## 📄 Lisensi
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+<div align="center">
+  <p>⭐ Jika project ini bermanfaat, jangan lupa kasih star ya!</p>
+  <p>Made with ❤️ in Indonesia</p>
+</div>
