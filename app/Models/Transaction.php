@@ -18,6 +18,7 @@ class Transaction extends Model
         'code',
         'user_id',
         'department_id',
+        'amount',
         'payment_method',
         'payment_status',
         'snap_token',

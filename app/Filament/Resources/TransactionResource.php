@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+
 class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
@@ -34,28 +35,50 @@ class TransactionResource extends Resource
                         Forms\Components\TextInput::make('code')
                             ->label('Transaction Code')
                             ->disabled()
+                            ->placeholder('Generated automatically')
                             ->columnSpan('full'),
 
                         Forms\Components\Select::make('user_id')
-                            ->relationship('user', 'name')
+                            ->relationship(
+                                'user',
+                                'name',
+                                // FILTER: Hanya ambil user yang memiliki data di tabel students
+                                modifyQueryUsing: fn($query) => $query->whereHas('student')
+                            )
                             ->searchable()
                             ->preload()
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(function ($state, callable $set) {
                                 $student = \App\Models\Student::where('user_id', $state)->first();
-                                if ($student && $student->department) {
+                                if ($student) {
+                                    // 1. Isi otomatis Department
                                     $set('department_id', $student->department_id);
-                                    // Isi otomatis amount-nya
-                                    $set('amount', $student->department->cost);
+
+                                    // 2. Ambil harga dari model Department
+                                    $cost = \App\Models\Department::find($student->department_id)?->cost;
+
+                                    // 3. Langsung beri titik (format) sebelum dikirim ke kotak Amount
+                                    $formattedCost = $cost ? number_format($cost, 0, ',', '.') : null;
+                                    $set('amount', $formattedCost);
                                 }
                             }),
 
                         Forms\Components\Select::make('department_id')
                             ->relationship('department', 'name')
+                            // INI AGAR MUNCUL: "Nama Jurusan - Semester X"
+                            ->getOptionLabelFromRecordUsing(fn($record) => "{$record->name} - Semester {$record->semester}")
                             ->searchable()
                             ->preload()
                             ->required(),
+
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Amount (IDR)')
+                            ->prefix('Rp')
+                            ->readOnly()
+                            ->required()
+                            // Bersihkan semua titik/huruf sebelum disimpan ke database (kembali murni jadi angka)
+                            ->dehydrateStateUsing(fn($state) => (int) preg_replace('/[^0-9]/', '', (string) $state)),
 
                         Forms\Components\Select::make('payment_method')
                             ->options([
@@ -107,12 +130,12 @@ class TransactionResource extends Resource
                     ->label('Department')
                     ->description(fn($record) => "Semester " . $record->department->semester),
 
-                Tables\Columns\TextColumn::make('amount') // Ambil dari transaksi, bukan department.cost
+                Tables\Columns\TextColumn::make('amount')
                     ->label('Amount (IDR)')
-                    ->money('IDR', locale: 'id') // Gunakan helper bawaan Filament agar rapi
-                    ->weight('bold')
-                    ->color('emerald'),
-                // ->sortable(), // Dimatikan sementara untuk mencegah JS Error pada relasi
+                    ->money('IDR', locale: 'id') // Otomatis mengubah angka (misal 500000) menjadi format Rp 500.000
+                    ->weight(\Filament\Support\Enums\FontWeight::Bold) // Membuat teks menjadi tebal
+                    ->color('success') // Warna hijau emerald (di Filament v3 menggunakan 'success')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('payment_status')
                     ->label('Status')
