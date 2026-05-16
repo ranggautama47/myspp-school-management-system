@@ -17,60 +17,96 @@ class RolePermissionSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // =========================================
-        // 1. BUAT SEMUA PERMISSIONS
+        // 1. DAFTAR SEMUA PERMISSIONS (Gabungan Lama & Baru)
+        // Tetap menggunakan format '-' agar kodingan lama tidak error
         // =========================================
-
-        $adminPermissions = [
-            'view-dashboard',
+        $permissions = [
+            // Academic
             'manage-departments',
-            'manage-users',
+            'manage-classrooms',
+            'manage-students',
+            'view-academic-reports',
+
+            // Finance
+            'view-dashboard',
             'manage-transactions',
             'approve-payment',
+            'view-reports',
             'export-reports',
-        ];
 
-        $studentPermissions = [
+            // System
+            'manage-users',
+            'manage-roles',
+            'manage-settings',
+            'view-audit-logs',
+
+            // Student Specific (Dari kodemu yang lama)
             'view-own-transactions',
             'make-payment',
             'upload-proof',
             'edit-profile',
         ];
 
-        $allPermissions = array_merge($adminPermissions, $studentPermissions);
+        // Buat Permissions
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
+        $this->command->info('✅ Permissions created: ' . count($permissions));
 
-        foreach ($allPermissions as $permission) {
-            Permission::firstOrCreate([
-                'name'       => $permission,
-                'guard_name' => 'web',
-            ]);
+        // =========================================
+        // 2. STRUKTUR ROLES (Dari Claude, tapi disesuaikan)
+        // =========================================
+        $roles = [
+            'super-admin' => '*', // Dapat semua akses
+            'admin' => [
+                'view-dashboard',
+                'manage-departments',
+                'manage-classrooms',
+                'manage-students',
+                'manage-transactions',
+                'approve-payment',
+                'view-reports',
+                'manage-users',
+            ],
+            'operator' => [
+                'view-dashboard',
+                'manage-students',
+                'manage-transactions',
+                'view-reports',
+            ],
+            'bendahara' => [
+                'view-dashboard',
+                'manage-transactions',
+                'approve-payment',
+                'view-reports',
+                'export-reports',
+            ],
+            'student' => [
+                // Mengembalikan hak akses student milikmu
+                'view-own-transactions',
+                'make-payment',
+                'upload-proof',
+                'edit-profile',
+            ],
+        ];
+
+        // Buat Roles & Assign Permissions
+        foreach ($roles as $roleName => $rolePermissions) {
+            $role = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+
+            if ($rolePermissions === '*') {
+                $role->syncPermissions(Permission::all());
+            } elseif (!empty($rolePermissions)) {
+                $role->syncPermissions($rolePermissions);
+            } else {
+                $role->syncPermissions([]);
+            }
+            $this->command->info("✅ Role [{$roleName}] configured.");
         }
 
-        $this->command->info('✅ ' . count($allPermissions) . ' permissions created.');
-
         // =========================================
-        // 2. BUAT ROLES DAN ASSIGN PERMISSIONS
+        // 3. KEMBALIKAN PEMBUATAN USER DEFAULT KAMU (Penting!)
         // =========================================
-
-        // Role: admin
-        $adminRole = Role::firstOrCreate([
-            'name'       => 'admin',
-            'guard_name' => 'web',
-        ]);
-        $adminRole->syncPermissions($adminPermissions);
-
-        // Role: student
-        $studentRole = Role::firstOrCreate([
-            'name'       => 'student',
-            'guard_name' => 'web',
-        ]);
-        $studentRole->syncPermissions($studentPermissions);
-
-        $this->command->info('✅ Roles created: admin, student');
-
-        // =========================================
-        // 3. BUAT USER ADMIN DEFAULT
-        // =========================================
-
         $admin = User::firstOrCreate(
             ['email' => 'admin@myspp.com'],
             [
@@ -79,13 +115,8 @@ class RolePermissionSeeder extends Seeder
                 'phone'    => '081234567890',
             ]
         );
-        $admin->assignRole('admin');
-
+        $admin->assignRole('super-admin'); // Ubah ke super-admin agar full akses
         $this->command->info('✅ Admin user created: admin@myspp.com / password');
-
-        // =========================================
-        // 4. BUAT USER STUDENT DEFAULT
-        // =========================================
 
         $student = User::firstOrCreate(
             ['email' => 'student@myspp.com'],
@@ -96,7 +127,9 @@ class RolePermissionSeeder extends Seeder
             ]
         );
         $student->assignRole('student');
-
         $this->command->info('✅ Student user created: student@myspp.com / password');
+
+        // Note: Bagian Default Settings dari Claude saya buang sementara
+        // untuk mencegah error "Table settings not found".
     }
 }
