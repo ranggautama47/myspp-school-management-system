@@ -2,9 +2,13 @@
 
 namespace App\Filament\Resources\TransactionResource\Pages;
 
+use App\Enums\TransactionStatus;
 use App\Filament\Resources\TransactionResource;
+use App\Models\Transaction;
 use Filament\Actions;
+use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Database\Eloquent\Builder;
 
 class ListTransactions extends ListRecords
 {
@@ -13,32 +17,44 @@ class ListTransactions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('New Payment')
+                ->icon('heroicon-o-plus'),
         ];
     }
+
+    // =========================================
+    // TABS — All / Pending / Paid / Expired
+    // Fix: badge pakai closure fn() => ... bukan static value
+    // Supaya badge count selalu fresh setiap render, bukan snapshot saat boot
+    // =========================================
 
     public function getTabs(): array
     {
         return [
-            'all' => \Filament\Resources\Components\Tab::make('All Transactions')
-                ->modifyQueryUsing(fn($query) => $query->with(['department', 'user'])),
+            'all' => Tab::make('All Transactions')
+                ->badge(fn() => Transaction::count()),
 
-            'pending' => \Filament\Resources\Components\Tab::make('Pending')
-                ->modifyQueryUsing(fn($query) => $query->with(['department', 'user'])
-                    ->where('payment_status', \App\Enums\TransactionStatus::Pending))
-                ->badge(\App\Models\Transaction::where('payment_status', \App\Enums\TransactionStatus::Pending)->count())
+            'pending' => Tab::make('Pending')
+                ->modifyQueryUsing(
+                    fn(Builder $query) => $query->where('payment_status', TransactionStatus::Pending->value)
+                )
+                ->badge(fn() => Transaction::pending()->count())
                 ->badgeColor('warning'),
 
-            'paid' => \Filament\Resources\Components\Tab::make('Paid')
-                ->modifyQueryUsing(fn($query) => $query->with(['department', 'user'])
-                    ->where('payment_status', \App\Enums\TransactionStatus::Paid))
-                ->badge(\App\Models\Transaction::where('payment_status', \App\Enums\TransactionStatus::Paid)->count())
+            'paid' => Tab::make('Paid')
+                ->modifyQueryUsing(
+                    fn(Builder $query) => $query->where('payment_status', TransactionStatus::Paid->value)
+                )
+                ->badge(fn() => Transaction::paid()->count())
                 ->badgeColor('success'),
 
-            'expired' => \Filament\Resources\Components\Tab::make('Expired')
-                ->modifyQueryUsing(fn($query) => $query->with(['department', 'user'])
-                    ->where('payment_status', \App\Enums\TransactionStatus::Expired))
-                ->badgeColor('danger'),
+            'expired' => Tab::make('Expired')
+                ->modifyQueryUsing(
+                    fn(Builder $query) => $query->where('payment_status', TransactionStatus::Expired->value)
+                )
+                ->badge(fn() => Transaction::expired()->count())
+                ->badgeColor('gray'),
         ];
     }
 }
