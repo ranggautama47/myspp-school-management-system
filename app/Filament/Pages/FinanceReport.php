@@ -167,7 +167,7 @@ class FinanceReport extends Page
             ->groupBy('category')
             ->get()
             ->map(fn($row) => [
-                'category' => \App\Enums\ExpenseCategory::from($row->category)->label(),
+                'category' => $row->category->label(),
                 'total' => (float) $row->total,
             ])
             ->toArray();
