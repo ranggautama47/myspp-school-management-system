@@ -59,7 +59,7 @@ class DepartmentResource extends Resource
                         ->placeholder('2.500.000')
                         ->required()
                         /** * 1. LOGIKA DINAMIS:
-                         * Menggunakan Alpine.js Mask bawaan Filament. 
+                         * Menggunakan Alpine.js Mask bawaan Filament.
                          * Menghasilkan format 1.000, 10.000, 100.000 secara otomatis saat diketik.
                          */
                         ->extraInputAttributes([

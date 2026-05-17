@@ -94,7 +94,7 @@ class StudentResource extends Resource
                             // 3. // TAMBAHAN LOGIKA: Filter Classroom berdasarkan Academic Year yang dipilih di atas
                             ->options(function (Forms\Get $get) {
                                 $academicYearId = $get('academic_year_id');
-                                if (! $academicYearId) {
+                                if (!$academicYearId) {
                                     return []; // Jika tahun belum dipilih, kelas kosong
                                 }
 
@@ -102,12 +102,12 @@ class StudentResource extends Resource
                                 return Classroom::where('academic_year_id', $academicYearId)
                                     ->get()
                                     ->mapWithKeys(function ($classroom) {
-                                        // Menampilkan nama kelas + jurusan agar tidak tertukar (Contoh: TI-1 - Teknik Informatika)
-                                        return [$classroom->id => $classroom->name . ' - ' . ($classroom->department->name ?? '')];
-                                    });
+                                    // Menampilkan nama kelas + jurusan agar tidak tertukar (Contoh: TI-1 - Teknik Informatika)
+                                    return [$classroom->id => $classroom->name . ' - ' . ($classroom->department->name ?? '')];
+                                });
                             })
                             ->afterStateUpdated(function (Forms\Set $set, ?string $state) {
-                                if (! $state) {
+                                if (!$state) {
                                     return;
                                 }
                                 $classroom = Classroom::find($state);
@@ -141,14 +141,32 @@ class StudentResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('phone')
                             ->tel()
-                            ->maxLength(20),
+                            ->maxLength(20)
+                            ->extraInputAttributes([
+                                // Memaksa inputan hanya menerima angka secara real-time saat diketik
+                                'oninput' => "this.value = this.value.replace(/[^0-9]/g, '')"
+                            ])
+                            // Proteksi tambahan di sisi backend agar benar-benar valid angka
+                            ->regex('/^[0-9]+$/')
+                            ->validationMessages([
+                                'regex' => 'Nomor telepon hanya boleh berisi angka.',
+                            ]),
                         Forms\Components\TextInput::make('parent_name')
                             ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('parent_phone')
                             ->tel()
                             ->required()
-                            ->maxLength(20),
+                            ->maxLength(20)
+                            ->extraInputAttributes([
+                                // Memaksa inputan hanya menerima angka secara real-time saat diketik
+                                'oninput' => "this.value = this.value.replace(/[^0-9]/g, '')"
+                            ])
+                            // Proteksi tambahan di sisi backend agar benar-benar valid angka
+                            ->regex('/^[0-9]+$/')
+                            ->validationMessages([
+                                'regex' => 'Nomor telepon orang tua hanya boleh berisi angka.',
+                            ]),
                         Forms\Components\Textarea::make('address')
                             ->columnSpanFull(),
                     ])->columns(2),
@@ -175,7 +193,7 @@ class StudentResource extends Resource
                     ->label('Class')
                     ->sortable()
                     ->searchable(),
-                    
+
                 Tables\Columns\TextColumn::make('department.semester')
                     ->label('Semester')
                     ->formatStateUsing(fn($state) => "Semester {$state}") // Biar tampil "Semester 3", bukan cuma "3"

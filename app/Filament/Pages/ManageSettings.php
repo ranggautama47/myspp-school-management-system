@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Auth;
 
 class ManageSettings extends Page
 {
-    protected static ?string $navigationIcon  = 'heroicon-o-cog-6-tooth';
+    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
     protected static ?string $navigationLabel = 'Settings';
     protected static ?string $navigationGroup = 'System';
-    protected static ?int    $navigationSort  = 3;
+    protected static ?int $navigationSort = 3;
 
     protected static string $view = 'filament.pages.manage-settings';
 
@@ -30,7 +30,7 @@ class ManageSettings extends Page
         $user = Auth::user();
 
         // Gunakan 'admin' (atau 'super-admin' tergantung seeder kamu)
-        return $user?->hasRole('admin') ?? false;
+        return $user?->hasRole('super-admin') ?? false;
     }
 
     // =========================================
@@ -46,23 +46,23 @@ class ManageSettings extends Page
 
         $this->form->fill([
             // General
-            'school_name'    => $settings->get('school_name')?->value,
+            'school_name' => $settings->get('school_name')?->value,
             'school_address' => $settings->get('school_address')?->value,
-            'school_phone'   => $settings->get('school_phone')?->value,
-            'school_email'   => $settings->get('school_email')?->value,
+            'school_phone' => $settings->get('school_phone')?->value,
+            'school_email' => $settings->get('school_email')?->value,
 
             // Academic
-            'academic_year'    => $settings->get('academic_year')?->value,
+            'academic_year' => $settings->get('academic_year')?->value,
             'default_capacity' => $settings->get('default_capacity')?->value,
 
             // Payment
-            'default_spp_amount'     => $settings->get('default_spp_amount')?->value,
+            'default_spp_amount' => $settings->get('default_spp_amount')?->value,
             'midtrans_is_production' => (bool) ($settings->get('midtrans_is_production')?->value ?? false),
 
             // System
             'maintenance_mode' => (bool) ($settings->get('maintenance_mode')?->value ?? false),
-            'timezone'         => $settings->get('timezone')?->value ?? 'Asia/Jakarta',
-            'default_theme'    => $settings->get('default_theme')?->value ?? 'dark',
+            'timezone' => $settings->get('timezone')?->value ?? 'Asia/Jakarta',
+            'default_theme' => $settings->get('default_theme')?->value ?? 'dark',
         ]);
     }
 
@@ -145,9 +145,17 @@ class ManageSettings extends Page
                                     ->schema([
                                         Forms\Components\TextInput::make('default_spp_amount')
                                             ->label('Default SPP Amount')
-                                            ->numeric()
+                                            ->placeholder('2.500.000')
+
                                             ->prefix('Rp')
-                                            ->minValue(0)
+
+                                            ->extraInputAttributes([
+                                                'x-mask:dynamic' => '$money($input, ".")',
+                                                'inputmode' => 'numeric', // Memaksa keyboard angka muncul di HP
+                                            ])
+                                            ->dehydrateStateUsing(fn($state) => (int) preg_replace('/[^0-9]/', '', (string) $state))
+                                            // Memunculkan titik kembali saat memuat data dari Database (Mode Edit)
+                                            ->formatStateUsing(fn($state) => $state ? number_format((float) $state, 0, ',', '.') : null)
                                             ->helperText('Nominal SPP default per bulan (bisa di-override per kelas)'),
                                     ]),
 
@@ -178,7 +186,7 @@ class ManageSettings extends Page
                                         Forms\Components\Select::make('timezone')
                                             ->label('Timezone')
                                             ->options([
-                                                'Asia/Jakarta'  => 'WIB — Asia/Jakarta (UTC+7)',
+                                                'Asia/Jakarta' => 'WIB — Asia/Jakarta (UTC+7)',
                                                 'Asia/Makassar' => 'WITA — Asia/Makassar (UTC+8)',
                                                 'Asia/Jayapura' => 'WIT — Asia/Jayapura (UTC+9)',
                                             ])
@@ -188,7 +196,7 @@ class ManageSettings extends Page
                                         Forms\Components\Select::make('default_theme')
                                             ->label('Default Theme')
                                             ->options([
-                                                'dark'  => '🌙 Dark',
+                                                'dark' => '🌙 Dark',
                                                 'light' => '☀️ Light',
                                             ])
                                             ->native(false)
