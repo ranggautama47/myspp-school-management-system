@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\ExpenseCategory;
 use App\Enums\InvoiceStatus;
 use App\Enums\TransactionStatus;
 use App\Models\Expense;
@@ -11,7 +12,6 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
-use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\DB;
 
 class FinanceReport extends Page
@@ -27,7 +27,7 @@ class FinanceReport extends Page
     // FILTER STATE
     // =========================================
 
-    public string $period = 'this_month'; // this_month | this_year | custom
+    public string $period = 'this_month';
     public ?string $dateFrom = null;
     public ?string $dateTo = null;
 
@@ -38,7 +38,27 @@ class FinanceReport extends Page
     }
 
     // =========================================
-    // HEADER ACTIONS — filter period
+    // HELPER — query paid transactions
+    // FIX: pakai COALESCE(paid_at, updated_at) agar transaksi
+    // yang approved manual (paid_at NULL) tetap masuk hitungan.
+    // Kalau paid_at ada → pakai paid_at
+    // Kalau paid_at NULL → fallback ke updated_at (saat status diubah)
+    // =========================================
+
+    private function paidTransactionsInPeriod(string $from, string $to)
+    {
+        return Transaction::paid()
+            ->where(function ($query) use ($from, $to) {
+                $query->whereBetween('paid_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+                    ->orWhere(function ($q) use ($from, $to) {
+                        $q->whereNull('paid_at')
+                            ->whereBetween('updated_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+                    });
+            });
+    }
+
+    // =========================================
+    // HEADER ACTIONS
     // =========================================
 
     protected function getHeaderActions(): array
@@ -47,6 +67,7 @@ class FinanceReport extends Page
             Action::make('filter')
                 ->label('Filter Period')
                 ->icon('heroicon-o-funnel')
+                ->color('primary')
                 ->form([
                     Select::make('period')
                         ->label('Period')
@@ -56,7 +77,7 @@ class FinanceReport extends Page
                             'custom' => 'Custom Range',
                         ])
                         ->default($this->period)
-                        ->reactive()
+                        ->live()
                         ->native(false),
 
                     DatePicker::make('date_from')
@@ -88,7 +109,6 @@ class FinanceReport extends Page
                     };
                 }),
 
-            // Export CSV action
             Action::make('export_csv')
                 ->label('Export CSV')
                 ->icon('heroicon-o-arrow-down-tray')
@@ -98,7 +118,7 @@ class FinanceReport extends Page
     }
 
     // =========================================
-    // DATA GETTERS — dipanggil dari Blade view
+    // STATS — semua pakai helper paidTransactionsInPeriod()
     // =========================================
 
     public function getStats(): array
@@ -106,21 +126,11 @@ class FinanceReport extends Page
         $from = $this->dateFrom;
         $to = $this->dateTo;
 
-        $totalRevenue = Transaction::paid()
-            ->whereBetween('paid_at', [$from, $to])
-            ->sum('amount');
-
-        $totalExpense = Expense::whereBetween('expense_date', [$from, $to])
-            ->sum('amount');
-
-        $totalPaid = Transaction::paid()
-            ->whereBetween('paid_at', [$from, $to])
-            ->count();
-
+        $totalRevenue = $this->paidTransactionsInPeriod($from, $to)->sum('amount');
+        $totalExpense = Expense::whereBetween('expense_date', [$from, $to])->sum('amount');
+        $totalPaid = $this->paidTransactionsInPeriod($from, $to)->count();
         $totalPending = Transaction::pending()->count();
-
         $totalInvoiceUnpaid = Invoice::unpaid()->count() + Invoice::overdue()->count();
-
         $netIncome = $totalRevenue - $totalExpense;
 
         return [
@@ -133,17 +143,20 @@ class FinanceReport extends Page
         ];
     }
 
+    // =========================================
+    // CHART — 6 bulan terakhir
+    // FIX: pakai helper yang sama agar konsisten
+    // =========================================
+
     public function getMonthlyRevenue(): array
     {
-        // 6 bulan terakhir — untuk line chart
         return collect(range(5, 0))->map(function ($monthsAgo) {
             $date = now()->subMonths($monthsAgo);
+            $from = $date->copy()->startOfMonth()->toDateString();
+            $to = $date->copy()->endOfMonth()->toDateString();
             $label = $date->format('M Y');
 
-            $revenue = Transaction::paid()
-                ->whereMonth('paid_at', $date->month)
-                ->whereYear('paid_at', $date->year)
-                ->sum('amount');
+            $revenue = $this->paidTransactionsInPeriod($from, $to)->sum('amount');
 
             $expense = Expense::whereMonth('expense_date', $date->month)
                 ->whereYear('expense_date', $date->year)
@@ -157,6 +170,10 @@ class FinanceReport extends Page
         })->toArray();
     }
 
+    // =========================================
+    // EXPENSE BY CATEGORY
+    // =========================================
+
     public function getExpenseByCategory(): array
     {
         $from = $this->dateFrom;
@@ -167,24 +184,30 @@ class FinanceReport extends Page
             ->groupBy('category')
             ->get()
             ->map(fn($row) => [
-                'category' => $row->category->label(),
+                'category' => ExpenseCategory::from($row->category)->label(),
                 'total' => (float) $row->total,
             ])
             ->toArray();
     }
 
+    // =========================================
+    // RECENT TRANSACTIONS — pakai helper
+    // =========================================
+
     public function getRecentTransactions(): \Illuminate\Database\Eloquent\Collection
     {
-        return Transaction::with(['user', 'department'])
-            ->paid()
-            ->whereBetween('paid_at', [$this->dateFrom, $this->dateTo])
-            ->latest('paid_at')
+        return $this->paidTransactionsInPeriod($this->dateFrom, $this->dateTo)
+            ->with(['user', 'department'])
+            ->latest('updated_at')
             ->limit(10)
             ->get();
     }
 
     // =========================================
     // EXPORT CSV
+    // FIX: pakai helper paidTransactionsInPeriod()
+    //      agar data yang paid_at NULL tetap ikut ter-export
+    //      Tambah kolom Status + Semester untuk kelengkapan laporan
     // =========================================
 
     public function exportCsv(): \Symfony\Component\HttpFoundation\StreamedResponse
@@ -192,40 +215,68 @@ class FinanceReport extends Page
         $from = $this->dateFrom;
         $to = $this->dateTo;
 
-        $transactions = Transaction::with(['user', 'department'])
-            ->paid()
-            ->whereBetween('paid_at', [$from, $to])
+        $transactions = $this->paidTransactionsInPeriod($from, $to)
+            ->with(['user', 'department'])
+            ->orderBy('updated_at', 'desc')
             ->get();
 
         $filename = 'finance-report-' . now()->format('Y-m-d') . '.csv';
 
-        return response()->streamDownload(function () use ($transactions) {
+        return response()->streamDownload(function () use ($transactions, $from, $to) {
+            // BOM UTF-8 agar Excel baca karakter Indonesia dengan benar
+            echo "\xEF\xBB\xBF";
+
             $handle = fopen('php://output', 'w');
 
-            // Header CSV
+            // Info periode di baris pertama
+            fputcsv($handle, ['Finance Report — MySPP']);
+            fputcsv($handle, ['Period', $from . ' s/d ' . $to]);
+            fputcsv($handle, ['Generated At', now()->format('Y-m-d H:i:s')]);
+            fputcsv($handle, []); // baris kosong pemisah
+
+            // Header kolom
             fputcsv($handle, [
+                'No',
                 'Transaction Code',
                 'Student Name',
                 'Department',
+                'Semester',
                 'Amount (IDR)',
                 'Payment Method',
+                'Status',
                 'Paid At',
+                'Created At',
             ]);
 
+            $no = 1;
             foreach ($transactions as $trx) {
                 fputcsv($handle, [
+                    $no++,
                     $trx->code,
                     $trx->user?->name ?? '-',
                     $trx->department?->name ?? '-',
+                    $trx->department?->semester ? 'Semester ' . $trx->department->semester : '-',
                     (int) $trx->amount,
-                    $trx->payment_method ?? '-',
-                    $trx->paid_at?->format('Y-m-d H:i') ?? '-',
+                    match ($trx->payment_method) {
+                        'bank_transfer' => 'Bank Transfer',
+                        'e_wallet' => 'E-Wallet',
+                        'manual' => 'Manual',
+                        default => $trx->payment_method ?? '-',
+                    },
+                    $trx->payment_status->label(),
+                    $trx->paid_at?->format('Y-m-d H:i') ?? $trx->updated_at?->format('Y-m-d H:i') . ' (approved)',
+                    $trx->created_at?->format('Y-m-d H:i') ?? '-',
                 ]);
             }
 
+            // Baris kosong + summary total di akhir
+            fputcsv($handle, []);
+            fputcsv($handle, ['', '', '', '', 'TOTAL', $transactions->sum('amount'), '', '', '', '']);
+
             fclose($handle);
         }, $filename, [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
 }
