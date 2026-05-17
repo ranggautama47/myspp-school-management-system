@@ -3,13 +3,16 @@
 namespace App\Filament\Resources;
 
 use App\Enums\TransactionStatus;
+use App\Filament\Resources\TransactionResource\Pages;
 use App\Models\Transaction;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TransactionResource extends Resource
 {
@@ -17,109 +20,118 @@ class TransactionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationGroup = 'Finance';
-
     protected static ?string $navigationLabel = 'Payments';
-
     protected static ?string $modelLabel = 'Payment';
-
     protected static ?string $pluralModelLabel = 'Payments';
-
     protected static ?int $navigationSort = 1;
+
+    protected static ?string $recordTitleAttribute = 'code';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['code', 'user.name'];
+    }
+
+    // =========================================
+    // FORM
+    // =========================================
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Transaction Information')
-                    ->schema([
-                        Forms\Components\TextInput::make('code')
-                            ->label('Transaction Code')
-                            ->disabled()
-                            ->placeholder('Generated automatically')
-                            ->columnSpan('full'),
+        return $form->schema([
+            Forms\Components\Section::make('Transaction Information')
+                ->schema([
+                    Forms\Components\TextInput::make('code')
+                        ->label('Transaction Code')
+                        ->disabled()
+                        ->placeholder('Generated automatically')
+                        ->columnSpanFull(),
 
-                        Forms\Components\Select::make('user_id')
-                            ->relationship(
-                                'user',
-                                'name',
-                                // FILTER: Hanya ambil user yang memiliki data di tabel students
-                                modifyQueryUsing: fn($query) => $query->whereHas('student')
-                            )
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                $student = \App\Models\Student::where('user_id', $state)->first();
-                                if ($student) {
-                                    // 1. Isi otomatis Department
-                                    $set('department_id', $student->department_id);
+                    Forms\Components\Select::make('user_id')
+                        ->label('Student')
+                        ->relationship(
+                            'user',
+                            'name',
+                            modifyQueryUsing: fn($query) => $query->whereHas('student')
+                        )
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->reactive()
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            $student = \App\Models\Student::where('user_id', $state)->first();
+                            if ($student) {
+                                $set('department_id', $student->department_id);
+                                $cost = \App\Models\Department::find($student->department_id)?->cost;
+                                $set('amount', $cost ? number_format((float) $cost, 0, ',', '.') : null);
+                            }
+                        }),
 
-                                    // 2. Ambil harga dari model Department
-                                    $cost = \App\Models\Department::find($student->department_id)?->cost;
+                    Forms\Components\Select::make('department_id')
+                        ->label('Department')
+                        ->relationship('department', 'name')
+                        ->getOptionLabelFromRecordUsing(fn($record) => "{$record->name} — Semester {$record->semester}")
+                        ->searchable()
+                        ->preload()
+                        ->required(),
 
-                                    // 3. Langsung beri titik (format) sebelum dikirim ke kotak Amount
-                                    $formattedCost = $cost ? number_format($cost, 0, ',', '.') : null;
-                                    $set('amount', $formattedCost);
-                                }
-                            }),
+                    Forms\Components\TextInput::make('amount')
+                        ->label('Amount (IDR)')
+                        ->prefix('Rp')
+                        ->required()
+                        ->extraInputAttributes([
+                            'x-mask:dynamic' => '$money($input, ".")',
+                            'inputmode' => 'numeric',
+                        ])
+                        ->dehydrateStateUsing(fn($state) => (int) preg_replace('/[^0-9]/', '', (string) $state)),
 
-                        Forms\Components\Select::make('department_id')
-                            ->relationship('department', 'name')
-                            // INI AGAR MUNCUL: "Nama Jurusan - Semester X"
-                            ->getOptionLabelFromRecordUsing(fn($record) => "{$record->name} - Semester {$record->semester}")
-                            ->searchable()
-                            ->preload()
-                            ->required(),
+                    Forms\Components\Select::make('payment_method')
+                        ->label('Payment Method')
+                        ->options([
+                            'bank_transfer' => 'Bank Transfer',
+                            'e_wallet' => 'E-Wallet',
+                            'manual' => 'Manual Payment',
+                        ])
+                        ->required()
+                        ->native(false),
 
-                        Forms\Components\TextInput::make('amount')
-                            ->label('Amount (IDR)')
-                            ->prefix('Rp')
-                            ->readOnly()
-                            ->required()
-                            // Bersihkan semua titik/huruf sebelum disimpan ke database (kembali murni jadi angka)
-                            ->dehydrateStateUsing(fn($state) => (int) preg_replace('/[^0-9]/', '', (string) $state)),
+                    Forms\Components\Select::make('payment_status')
+                        ->label('Status')
+                        ->options(TransactionStatus::options())
+                        ->required()
+                        ->native(false),
 
-                        Forms\Components\Select::make('payment_method')
-                            ->options([
-                                'bank_transfer' => 'Bank Transfer',
-                                'e_wallet' => 'E-Wallet',
-                                'manual' => 'Manual Payment',
-                            ])
-                            ->required(),
+                    Forms\Components\DateTimePicker::make('paid_at')
+                        ->label('Paid At'),
 
-                        Forms\Components\Select::make('payment_status')
-                            ->options([
-                                TransactionStatus::Pending->value => TransactionStatus::Pending->label(),
-                                TransactionStatus::Paid->value => TransactionStatus::Paid->label(),
-                                TransactionStatus::Expired->value => TransactionStatus::Expired->label(),
-                            ])
-                            ->required(),
-
-                        Forms\Components\DateTimePicker::make('paid_at')
-                            ->label('Paid At'),
-
-                        Forms\Components\FileUpload::make('proof_of_payment')
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'application/pdf'])
-                            ->directory('proofs')
-                            ->disk('public')
-                            ->downloadable()
-                            ->openable()
-                            ->previewable(true)
-                            ->columnSpanFull(),
-                    ])->columns(2),
-            ]);
+                    Forms\Components\FileUpload::make('proof_of_payment')
+                        ->label('Proof of Payment')
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'application/pdf'])
+                        ->directory('proofs')
+                        ->disk('public')
+                        ->downloadable()
+                        ->openable()
+                        ->previewable(true)
+                        ->columnSpanFull(),
+                ])
+                ->columns(2),
+        ]);
     }
+
+    // =========================================
+    // TABLE
+    // =========================================
 
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn($query) => $query->with(['department', 'user']))
+            ->modifyQueryUsing(fn(Builder $query) => $query->with(['department', 'user']))
             ->columns([
                 Tables\Columns\TextColumn::make('code')
                     ->label('Code')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight(\Filament\Support\Enums\FontWeight::Medium),
 
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Student')
@@ -128,13 +140,13 @@ class TransactionResource extends Resource
 
                 Tables\Columns\TextColumn::make('department.name')
                     ->label('Department')
-                    ->description(fn($record) => "Semester " . $record->department->semester),
+                    ->description(fn($record) => 'Semester ' . ($record->department?->semester ?? '-')),
 
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Amount (IDR)')
-                    ->money('IDR', locale: 'id') // Otomatis mengubah angka (misal 500000) menjadi format Rp 500.000
-                    ->weight(\Filament\Support\Enums\FontWeight::Bold) // Membuat teks menjadi tebal
-                    ->color('success') // Warna hijau emerald (di Filament v3 menggunakan 'success')
+                    ->money('IDR', locale: 'id')
+                    ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                    ->color('success')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('payment_status')
@@ -149,12 +161,11 @@ class TransactionResource extends Resource
                     ->sortable(),
             ])
             ->filters([
+                Tables\Filters\TrashedFilter::make(),
+
                 Tables\Filters\SelectFilter::make('payment_status')
-                    ->options([
-                        TransactionStatus::Pending->value => TransactionStatus::Pending->label(),
-                        TransactionStatus::Paid->value => TransactionStatus::Paid->label(),
-                        TransactionStatus::Expired->value => TransactionStatus::Expired->label(),
-                    ]),
+                    ->label('Status')
+                    ->options(TransactionStatus::options()),
             ])
             ->actions([
                 Tables\Actions\Action::make('approve')
@@ -163,38 +174,70 @@ class TransactionResource extends Resource
                     ->color('success')
                     ->requiresConfirmation()
                     ->modalHeading('Approve Payment')
-                    ->modalDescription('Are you sure you want to approve this payment? This action cannot be undone.')
+                    ->modalDescription('Yakin ingin approve pembayaran ini? Aksi ini tidak bisa dibatalkan.')
                     ->visible(fn(Transaction $record) => $record->payment_status === TransactionStatus::Pending)
                     ->action(function (Transaction $record) {
-                        $record->update([
-                            'payment_status' => TransactionStatus::Paid,
-                            'paid_at' => now(),
-                        ]);
+                        $record->markAsPaid($record->payment_method ?? 'manual');
+
+                        Notification::make()
+                            ->title('Payment approved')
+                            ->body("Transaksi {$record->code} berhasil diapprove.")
+                            ->success()
+                            ->send();
                     }),
+
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->striped();
     }
 
-    public static function getRelations(): array
+    // =========================================
+    // QUERY
+    // =========================================
+
+    public static function getEloquentQuery(): Builder
     {
-        return [
-            //
-        ];
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([SoftDeletingScope::class])
+            ->with(['user', 'department']);
     }
+
+    // =========================================
+    // PAGES
+    // =========================================
 
     public static function getPages(): array
     {
         return [
-            'index' => \App\Filament\Resources\TransactionResource\Pages\ListTransactions::route('/'),
-            'create' => \App\Filament\Resources\TransactionResource\Pages\CreateTransaction::route('/create'),
-            'edit' => \App\Filament\Resources\TransactionResource\Pages\EditTransaction::route('/{record}/edit'),
+            'index' => Pages\ListTransactions::route('/'),
+            'create' => Pages\CreateTransaction::route('/create'),
+            'edit' => Pages\EditTransaction::route('/{record}/edit'),
         ];
+    }
+
+    // =========================================
+    // NAV BADGE — pending count
+    // =========================================
+
+    public static function getNavigationBadge(): ?string
+    {
+        $count = static::getModel()::pending()->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'warning';
     }
 }
