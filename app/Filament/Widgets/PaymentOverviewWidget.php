@@ -101,7 +101,7 @@ class PaymentOverviewWidget extends ChartWidget
                 'y' => ['display' => false],
             ],
             'cutout' => '65%',
-            'maintainAspectRatio' => false,
+            'maintainAspectRatio' => true,
             'responsive' => true,
             'layout' => ['padding' => ['bottom' => 8]],
             // FIX: Disable animations to prevent re-rendering loops
