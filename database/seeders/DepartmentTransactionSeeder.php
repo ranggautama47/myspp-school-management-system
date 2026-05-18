@@ -55,6 +55,7 @@ class DepartmentTransactionSeeder extends Seeder
                     'payment_method' => 'gopay',
                     'payment_status' => TransactionStatus::Paid,
                     'paid_at'        => now()->subMonth(),
+                    'amount'         => $dept->cost,
                 ]
             );
 
@@ -65,6 +66,7 @@ class DepartmentTransactionSeeder extends Seeder
                     'user_id'        => $student->id,
                     'department_id'  => $dept->id,
                     'payment_status' => TransactionStatus::Pending,
+                    'amount'         => $dept->cost,
                 ]
             );
 
