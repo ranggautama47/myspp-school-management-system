@@ -95,36 +95,51 @@
     MONTHLY REVENUE & EXPENSE CHART — menggunakan Filament Chart widget embed
     =================================================== --}}
     @php
-        $monthly = $this->getMonthlyRevenue();
-        $months = collect($monthly)->pluck('month')->toJson();
-        $revenues = collect($monthly)->pluck('revenue')->toJson();
-        $expenses = collect($monthly)->pluck('expense')->toJson();
-    @endphp
+    $monthly = $this->getMonthlyRevenue();
+    $totals = $this->getChartTotals();
+    $months = collect($monthly)->pluck('month')->toJson();
+    $revenues = collect($monthly)->pluck('revenue')->toJson();
+    $expenses = collect($monthly)->pluck('expense')->toJson();
+@endphp
 
-    <div class="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
+<div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+    {{-- Line Chart: Revenue vs Expense --}}
+    <div class="xl:col-span-2 rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
 
-        {{-- Line Chart: Revenue vs Expense 6 bulan --}}
-        <div
-            class="xl:col-span-2 rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
-            <h3 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Revenue vs Expenses — 6 Bulan
-                Terakhir</h3>
-            <canvas id="revenueChart" height="120"></canvas>
+        <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Revenue vs Expenses — {{ $chartMonths }} Bulan Terakhir
+                </h3>
+                <p class="mt-1 text-xs text-gray-500">
+                    Total Rev: <span class="font-bold text-success-600">Rp {{ number_format($totals['revenue'], 0, ',', '.') }}</span> |
+                    Total Exp: <span class="font-bold text-danger-600">Rp {{ number_format($totals['expense'], 0, ',', '.') }}</span>
+                </p>
+            </div>
+
+            <select wire:model.live="chartMonths" class="text-xs rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+                <option value="3">3 Bulan</option>
+                <option value="6">6 Bulan</option>
+                <option value="12">12 Bulan</option>
+            </select>
         </div>
 
-        {{-- Expense by Category --}}
-        <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
-            <h3 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Expenses by Category</h3>
-            @php $byCategory = $this->getExpenseByCategory(); @endphp
-            @if(count($byCategory) > 0)
-                <canvas id="categoryChart" height="200"></canvas>
-            @else
-                <div class="flex h-40 items-center justify-center text-sm text-gray-400">
-                    Belum ada data expense dalam periode ini.
-                </div>
-            @endif
-        </div>
-
+        <canvas id="revenueChart" height="120"></canvas>
     </div>
+
+    {{-- Expense by Category --}}
+    <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+        <h3 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Expenses by Category</h3>
+        @php $byCategory = $this->getExpenseByCategory(); @endphp
+        @if(count($byCategory) > 0)
+            <canvas id="categoryChart" height="200"></canvas>
+        @else
+            <div class="flex h-40 items-center justify-center text-sm text-gray-400">
+                Belum ada data expense.
+            </div>
+        @endif
+    </div>
+</div>
 
     {{-- ===================================================
     RECENT PAID TRANSACTIONS TABLE
@@ -173,107 +188,124 @@
     CHART.JS — loaded via CDN, standalone (bukan Filament chart widget)
     Aman karena tidak mengganggu Livewire cycle
     =================================================== --}}
-    @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const isDark = document.documentElement.classList.contains('dark');
-                const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-                const labelColor = isDark ? '#94a3b8' : '#64748b';
+  @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-                // ── Revenue vs Expense Line Chart ──────────────
-                const revenueCtx = document.getElementById('revenueChart');
-                if (revenueCtx) {
-                    new Chart(revenueCtx, {
-                        type: 'line',
-                        data: {
-                            labels: {!! $months !!},
-                            datasets: [
-                                {
-                                    label: 'Revenue',
-                                    data: {!! $revenues !!},
-                                    borderColor: '#10B981',
-                                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                    borderWidth: 2,
-                                    tension: 0.4,
-                                    fill: true,
-                                    pointBackgroundColor: '#10B981',
-                                },
-                                {
-                                    label: 'Expenses',
-                                    data: {!! $expenses !!},
-                                    borderColor: '#F43F5E',
-                                    backgroundColor: 'rgba(244, 63, 94, 0.08)',
-                                    borderWidth: 2,
-                                    tension: 0.4,
-                                    fill: true,
-                                    pointBackgroundColor: '#F43F5E',
-                                },
-                            ],
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    labels: { color: labelColor, font: { size: 12 } }
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: ctx => 'Rp ' + ctx.parsed.y.toLocaleString('id-ID'),
-                                    },
-                                },
-                            },
-                            scales: {
-                                x: { ticks: { color: labelColor }, grid: { color: gridColor } },
-                                y: {
-                                    ticks: {
-                                        color: labelColor,
-                                        callback: v => 'Rp ' + (v / 1000000).toFixed(1) + 'jt',
-                                    },
-                                    grid: { color: gridColor },
-                                },
-                            },
-                        },
-                    });
-                }
+<script>
+    let revenueChart = null;
+    let categoryChart = null;
 
-                // ── Category Donut Chart ───────────────────────
-                @php $byCategoryJson = json_encode($byCategory); @endphp
-                const catData = {!! $byCategoryJson !!};
-                const categoryCtx = document.getElementById('categoryChart');
-                if (categoryCtx && catData.length > 0) {
-                    new Chart(categoryCtx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: catData.map(d => d.category),
-                            datasets: [{
-                                data: catData.map(d => d.total),
-                                backgroundColor: [
-                                    '#10B981', '#F59E0B', '#3B82F6',
-                                    '#8B5CF6', '#F43F5E', '#64748B', '#06B6D4',
-                                ],
-                                borderWidth: 0,
-                            }],
-                        },
-                        options: {
-                            responsive: true,
-                            cutout: '65%',
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: { color: labelColor, font: { size: 11 }, padding: 12 },
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: ctx => ' Rp ' + ctx.parsed.toLocaleString('id-ID'),
-                                    },
-                                },
+    function initFinanceCharts() {
+        const isDark = document.documentElement.classList.contains('dark');
+        const labelColor = isDark ? '#94a3b8' : '#64748b';
+        const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+        // Ambil data terbaru dari Livewire component
+        @this.call('getMonthlyRevenue').then(monthlyData => {
+            // 1. Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart');
+            if (revenueCtx) {
+                if (revenueChart) revenueChart.destroy();
+
+                revenueChart = new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: monthlyData.map(d => d.month),
+                        datasets: [
+                            {
+                                label: 'Revenue',
+                                data: monthlyData.map(d => d.revenue),
+                                borderColor: '#10B981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                fill: true,
+                                tension: 0.4
                             },
+                            {
+                                label: 'Expenses',
+                                data: monthlyData.map(d => d.expense),
+                                borderColor: '#F43F5E',
+                                backgroundColor: 'rgba(244, 63, 94, 0.08)',
+                                fill: true,
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            y: {
+                                ticks: {
+                                    color: labelColor,
+                                    callback: v => 'Rp ' + (v/1000000).toFixed(1) + 'jt'
+                                },
+                                grid: { color: gridColor }
+                            },
+                            x: {
+                                ticks: { color: labelColor },
+                                grid: { color: gridColor }
+                            }
                         },
-                    });
-                }
-            });
-        </script>
-    @endpush
+                        plugins: { legend: { labels: { color: labelColor } } }
+                    }
+                });
+            }
+        });
+
+        // Category Chart
+        @this.call('getExpenseByCategory').then(catData => {
+            const categoryCtx = document.getElementById('categoryChart');
+            if (categoryCtx && catData.length > 0) {
+                if (categoryChart) categoryChart.destroy();
+
+                categoryChart = new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: catData.map(d => d.category),
+                        datasets: [{
+                            data: catData.map(d => d.total),
+                            backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#8B5CF6', '#F43F5E']
+                        }]
+                    },
+                    options: {
+                        cutout: '65%',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: labelColor }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        // Update total text di atas chart
+        @this.call('getChartTotals').then(totals => {
+            const totalText = document.querySelector('#revenueChart')?.closest('.xl\\:col-span-2')?.querySelector('.text-xs');
+            if (totalText) {
+                totalText.innerHTML = `Total Rev: <span class="font-bold text-success-600">Rp ${new Intl.NumberFormat('id-ID').format(totals.revenue)}</span> | Total Exp: <span class="font-bold text-danger-600">Rp ${new Intl.NumberFormat('id-ID').format(totals.expense)}</span>`;
+            }
+        });
+    }
+
+    // Jalankan saat halaman pertama kali dibuka
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initFinanceCharts, 100);
+    });
+
+    // Refresh chart saat Livewire melakukan update (termasuk saat ganti dropdown)
+    document.addEventListener('livewire:navigated', () => {
+        initFinanceCharts();
+    });
+
+    // Listener untuk event refresh dari PHP
+    window.addEventListener('refresh-chart', () => {
+        initFinanceCharts();
+    });
+</script>
+@endpush
 
 </x-filament-panels::page>
