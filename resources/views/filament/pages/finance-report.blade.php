@@ -283,6 +283,9 @@
                     if (categoryCtx && catData.length > 0) {
                         if (categoryChart) categoryChart.destroy();
 
+                         const isDark = document.documentElement.classList.contains('dark');
+                         const legendTextColor = isDark ? '#f1f5f9' : '#1e293b';
+
                         categoryChart = new Chart(categoryCtx, {
                             type: 'doughnut',
                             data: {
@@ -299,7 +302,7 @@
                                 plugins: {
                                     legend: {
                                         position: 'bottom',
-                                        labels: { color: labelColor }
+                                        labels: { color: legendTextColor }
                                     }
                                 }
                             }
