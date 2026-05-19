@@ -2,106 +2,116 @@
 
 namespace App\Services;
 
-use App\Enums\TransactionStatus;
-use App\Models\PaymentLog;
 use App\Models\Transaction;
-use Illuminate\Support\Facades\Log;
+use App\Models\PaymentLog;
+use Midtrans\Config;
+use Midtrans\Snap;
+use Midtrans\Notification;
 
 class MidtransService
 {
-    private string $serverKey;
-
     public function __construct()
     {
-        $this->serverKey = config('services.midtrans.server_key');
-
-        \Midtrans\Config::$serverKey    = $this->serverKey;
-        \Midtrans\Config::$isProduction = config('services.midtrans.is_production', false);
-        \Midtrans\Config::$isSanitized  = true;
-        \Midtrans\Config::$is3ds        = true;
+        // Konfigurasi Midtrans dari config/services.php
+        Config::$serverKey = config('services.midtrans.server_key');
+        Config::$isProduction = config('services.midtrans.is_production');
+        Config::$isSanitized = config('services.midtrans.is_sanitized');
+        Config::$is3ds = config('services.midtrans.is_3ds');
     }
 
     /**
-     * Step 3 dari payment-flow.md:
-     * Server kirim detail transaksi ke Midtrans → dapat snap_token.
+     * Generate Snap token untuk payment popup.
+     * Dipanggil dari TransactionController atau StudentController.
      */
-    public function createSnapToken(Transaction $transaction): array
+    public function createSnapToken(Transaction $transaction): string
     {
-        try {
-            $params = [
-                'transaction_details' => [
-                    'order_id'     => $transaction->code,
-                    'gross_amount' => (int) $transaction->department->cost,
+        $params = [
+            'transaction_details' => [
+                'order_id' => $transaction->code,
+                'gross_amount' => (int) $transaction->amount,
+            ],
+            'customer_details' => [
+                'first_name' => $transaction->user?->name ?? 'Student',
+                'email' => $transaction->user?->email ?? 'student@myspp.com',
+                'phone' => $transaction->user?->phone ?? '08123456789',
+            ],
+            'item_details' => [
+                [
+                    'id' => $transaction->department?->id ?? 1,
+                    'price' => (int) $transaction->amount,
+                    'quantity' => 1,
+                    'name' => 'SPP ' . ($transaction->department?->name ?? 'Biaya Pendidikan'),
                 ],
-                'customer_details' => [
-                    'first_name' => $transaction->user->name,
-                    'email'      => $transaction->user->email,
-                    'phone'      => $transaction->user->phone ?? '',
-                ],
-            ];
+            ],
+        ];
 
-            $token       = \Midtrans\Snap::getSnapToken($params);
-            $redirectUrl = \Midtrans\Snap::createTransaction($params)->redirect_url;
+        $snapToken = Snap::getSnapToken($params);
 
-            return [
-                'token'        => $token,
-                'redirect_url' => $redirectUrl,
-            ];
-        } catch (\Exception $e) {
-            Log::error('[MidtransService] createSnapToken gagal', [
-                'transaction_code' => $transaction->code,
-                'error'            => $e->getMessage(),
-            ]);
-            throw $e;
-        }
+        // Simpan snap token ke transaction
+        $transaction->update([
+            'snap_token' => $snapToken,
+            'midtrans_url' => Snap::getSnapUrl($params),
+        ]);
+
+        return $snapToken;
     }
 
     /**
-     * Step 6-9 dari payment-flow.md:
-     * Midtrans kirim webhook → validasi signature → update status → catat log.
-     *
-     * Idempotent: transaksi yang sudah paid tidak akan diproses ulang.
+     * Handle webhook notification dari Midtrans.
+     * Dipanggil dari MidtransController@webhook.
      */
     public function handleWebhook(array $payload): void
     {
-        // Step 7: Verifikasi signature key — security dari payment-flow.md section 6
-        $this->verifySignature($payload);
+        // Verifikasi signature dulu
+        if (!$this->verifySignature($payload)) {
+            throw new \Exception('Invalid Midtrans signature key.');
+        }
 
-        $transaction = Transaction::where('code', $payload['order_id'])->firstOrFail();
+        $orderId = $payload['order_id'] ?? null;
+        $status = $payload['transaction_status'] ?? null;
 
-        // Step 9: Catat log webhook untuk audit trail
+        if (!$orderId || !$status) {
+            return;
+        }
+
+        $transaction = Transaction::where('code', $orderId)->first();
+
+        if (!$transaction) {
+            return; // Order tidak ditemukan, abaikan
+        }
+
+        // Catat ke PaymentLog untuk audit trail
         PaymentLog::record($transaction, $payload);
 
-        $status      = $payload['transaction_status'] ?? '';
-        $paymentType = $payload['payment_type'] ?? 'unknown';
-
-        // Pemetaan status sesuai tabel payment-flow.md section 4
-        match($status) {
-            'settlement', 'capture' => $transaction->markAsPaid($paymentType),
-            'expire'                => $transaction->markAsExpired(),
-            'cancel', 'deny'        => $transaction->update(['payment_status' => TransactionStatus::Cancelled]),
-            default                 => null, // 'pending' — tidak perlu diproses
+        // Update status transaksi berdasarkan notifikasi Midtrans
+        match ($status) {
+            'settlement', 'capture' => $transaction->markAsPaid(
+                $payload['payment_type'] ?? 'midtrans'
+            ),
+            'expire' => $transaction->markAsExpired(),
+            'deny', 'cancel' => $transaction->update([
+                'payment_status' => \App\Enums\TransactionStatus::Cancelled,
+            ]),
+            default => null, // pending, dll — tidak ada aksi
         };
     }
 
     /**
-     * Validasi SHA512 signature dari Midtrans.
-     * Mencegah spoofing dari pihak luar.
+     * Verifikasi signature key dari webhook Midtrans.
+     * Formula: SHA512(order_id + status_code + gross_amount + server_key)
      */
-    private function verifySignature(array $payload): void
+    public function verifySignature(array $payload): bool
     {
-        $expected = hash('sha512',
-            ($payload['order_id'] ?? '') .
-            ($payload['status_code'] ?? '') .
-            ($payload['gross_amount'] ?? '') .
-            $this->serverKey
+        $orderId = $payload['order_id'] ?? '';
+        $statusCode = $payload['status_code'] ?? '';
+        $grossAmount = $payload['gross_amount'] ?? '';
+        $serverKey = config('services.midtrans.server_key');
+
+        $expectedSignature = hash(
+            'sha512',
+            $orderId . $statusCode . $grossAmount . $serverKey
         );
 
-        if ($expected !== ($payload['signature_key'] ?? '')) {
-            Log::warning('[MidtransService] Signature tidak valid', [
-                'order_id' => $payload['order_id'] ?? 'unknown',
-            ]);
-            throw new \Exception('Invalid Midtrans signature key.');
-        }
+        return ($payload['signature_key'] ?? '') === $expectedSignature;
     }
 }
