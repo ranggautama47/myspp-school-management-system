@@ -31,16 +31,16 @@ class TransactionPolicy
     }
 
     /**
-     * Hanya admin yang bisa buat tagihan.
+     * Admin dan Super Admin bisa buat tagihan.
      */
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() || $user->hasRole('super-admin');
     }
 
     /**
      * Student bisa bayar transaksi miliknya yang masih pending.
-     * Admin tidak perlu — admin pakai approve.
+     * Admin/Super Admin tidak perlu — pakai approve.
      */
     public function pay(User $user, Transaction $transaction): bool
     {
@@ -58,18 +58,18 @@ class TransactionPolicy
     }
 
     /**
-     * Approve manual payment — hanya admin.
+     * Approve manual payment — Admin dan Super Admin.
      */
     public function approve(User $user, Transaction $transaction): bool
     {
-        return $user->isAdmin() && $transaction->isPending();
+        return ($user->isAdmin() || $user->hasRole('super-admin')) && $transaction->isPending();
     }
 
     /**
-     * Delete — hanya admin.
+     * Delete — Admin dan Super Admin.
      */
-    public function delete(User $user): bool
+    public function delete(User $user, Transaction $transaction): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() || $user->hasRole('super-admin');
     }
 }

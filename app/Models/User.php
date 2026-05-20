@@ -88,7 +88,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->hasRole(UserRole::Admin->value);
+        return $this->hasRole([UserRole::Admin->value, 'super-admin']);
     }
 
     public function isStudent(): bool
