@@ -3,41 +3,111 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Transaction;
 use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
-/**
- * MidtransController — Skinny Controller.
- *
- * Hanya menerima webhook dan meneruskan ke MidtransService.
- * Tidak ada logic di sini.
- */
 class MidtransController extends Controller
 {
     public function __construct(
-        private readonly MidtransService $service,
-    ) {}
+        private readonly MidtransService $midtransService
+    ) {
+    }
 
-    /**
-     * POST /api/midtrans/webhook
-     *
-     * Endpoint ini PUBLIC — tidak perlu auth.
-     * Keamanan dijaga lewat signature verification di MidtransService.
-     *
-     * Sesuai payment-flow.md Step 6-9.
-     */
-    public function webhook(Request $request): JsonResponse
+    // =========================================
+    // SNAP TOKEN
+    // POST /api/midtrans/snap-token
+    // Header: Authorization: Bearer {token}
+    // Body: { transaction_id }
+    //
+    // Student request snap token untuk buka popup Midtrans.
+    // Hanya boleh request untuk transaksi milik sendiri.
+    // =========================================
+
+    public function snapToken(Request $request): JsonResponse
     {
-        try {
-            $this->service->handleWebhook($request->all());
+        $request->validate([
+            'transaction_id' => ['required', 'integer', 'exists:transactions,id'],
+        ]);
 
-            return response()->json(['success' => true], 200);
+        $transaction = Transaction::with(['user', 'department'])
+            ->findOrFail($request->transaction_id);
+
+        // Guard: student hanya bisa request token untuk transaksinya sendiri
+        if (
+            !$request->user()->hasRole('admin') &&
+            !$request->user()->hasRole('super admin')
+        ) {
+            if ($transaction->user_id !== $request->user()->id) {
+                return response()->json([
+                    'message' => 'Unauthorized. Transaksi ini bukan milik kamu.',
+                ], 403);
+            }
+        }
+
+        // Guard: hanya transaksi pending yang bisa dibayar
+        if (!$transaction->canBePaid()) {
+            return response()->json([
+                'message' => 'Transaksi ini tidak bisa dibayar. Status: ' . $transaction->payment_status->label(),
+            ], 422);
+        }
+
+        try {
+            $snapToken = $this->midtransService->createSnapToken($transaction);
+
+            return response()->json([
+                'snap_token' => $snapToken,
+                'client_key' => config('services.midtrans.client_key'),
+                'is_production' => config('services.midtrans.is_production'),
+                'transaction' => [
+                    'code' => $transaction->code,
+                    'amount' => (int) $transaction->amount,
+                ],
+            ]);
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'message' => 'Gagal generate snap token: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // =========================================
+    // WEBHOOK
+    // POST /api/midtrans/webhook
+    // Tidak pakai auth — Midtrans server yang kirim
+    //
+    // Midtrans akan kirim notifikasi ke sini saat:
+    // - Payment settlement (lunas)
+    // - Payment pending
+    // - Payment expired / deny / cancel
+    // =========================================
+
+    public function webhook(Request $request): Response
+    {
+        $payload = $request->all();
+
+        // Log raw payload untuk debugging (hapus di production jika tidak perlu)
+        \Illuminate\Support\Facades\Log::info('Midtrans webhook received', [
+            'order_id' => $payload['order_id'] ?? 'unknown',
+            'status' => $payload['transaction_status'] ?? 'unknown',
+        ]);
+
+        try {
+            $this->midtransService->handleWebhook($payload);
+
+            // Midtrans butuh HTTP 200 untuk tahu webhook berhasil diterima
+            return response('OK', 200);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Midtrans webhook error', [
                 'message' => $e->getMessage(),
-            ], 400);
+                'payload' => $payload,
+            ]);
+
+            // Tetap return 200 ke Midtrans agar tidak retry terus-menerus
+            // Error sudah dicatat di log
+            return response('Error handled', 200);
         }
     }
 }
