@@ -55,6 +55,18 @@ class MidtransService
                     'name'     => 'SPP ' . ($transaction->department?->name ?? 'Biaya Pendidikan'),
                 ],
             ],
+
+            // ─────────────────────────────────────────────────────────
+            // FIX SANDBOX: Hanya tampilkan metode yang ada simulatornya
+            // QRIS dan ShopeePay tidak bisa di-simulate → dibuang
+            // GoPay biasa → ada tombol "Simulate Payment" di sandbox
+            // ─────────────────────────────────────────────────────────
+            'enabled_payments' => [
+                'gopay',
+                'bank_transfer',
+                'credit_card',
+            ],
+
             'expiry' => [
                 'unit'     => 'hour',
                 'duration' => 1,
