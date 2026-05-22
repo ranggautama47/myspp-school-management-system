@@ -19,6 +19,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+
+    
         // =========================================
         // Daftarkan Observer
         // Sesuai architecture.md: Observer Pattern

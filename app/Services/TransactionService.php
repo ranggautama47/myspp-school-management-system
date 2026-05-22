@@ -49,7 +49,6 @@ class TransactionService
 
         return $snapData;
     }
-
     /**
      * Siswa upload bukti bayar manual (tanpa Midtrans).
      * Status tetap pending — tunggu approve admin.
