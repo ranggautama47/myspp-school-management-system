@@ -78,7 +78,7 @@ Built as a **portfolio project** to demonstrate real-world Laravel development: 
 | --------------------------- | ------------ |
 | Student login via API       | ✅ Done      |
 | View tuition bill status    | 🔄 Phase 4   |
-| Pay SPP via Midtrans Snap   | 🔄 Phase 3–4 |
+| Pay SPP via Midtrans Snap   | 🔄 Phase 4   |
 | Upload manual payment proof | 🔄 Phase 4   |
 | Transaction history         | 🔄 Phase 4   |
 
@@ -86,10 +86,10 @@ Built as a **portfolio project** to demonstrate real-world Laravel development: 
 
 | Feature                    | Status             |
 | -------------------------- | ------------------ |
-| Midtrans service & config  | ✅ Structure ready |
-| Snap token generation      | 🔄 Phase 3         |
-| Webhook handler            | 🔄 Phase 3         |
-| Payment status auto-update | 🔄 Phase 3         |
+| Midtrans service & config  | ✅ Done            |
+| Snap token generation      | ✅ Done            |
+| Webhook handler            | ✅ Done            |
+| Payment status auto-update | ✅ Done            |
 
 ---
 
@@ -113,27 +113,31 @@ Built as a **portfolio project** to demonstrate real-world Laravel development: 
 
 ---
 
-## 🗄 Database Schema
+# 🗄 Database Schema — MySPP
 
-```
-users               ← Students and admins (differentiated by role)
-students            ← Student profile linked to user
-departments         ← Major/program + SPP cost per semester
-classrooms          ← Class linked to department & academic year
-academic_years      ← Academic year records
-transactions        ← SPP payment records + Midtrans status
-payment_logs        ← Midtrans webhook audit trail
-invoices            ← Billing issued to students
-expenses            ← School operational expenses
-settings            ← Application-wide configuration (key-value)
+| Table | Description |
+|---|---|
+| users | Students and admins (differentiated by role) |
+| students | Student profile linked to user |
+| departments | Major/program + SPP cost per semester |
+| classrooms | Class linked to department & academic year |
+| academic_years | Academic year records |
+| transactions | SPP payment records + Midtrans status |
+| payment_logs | Midtrans webhook audit trail |
+| invoices | Billing issued to students |
+| expenses | School operational expenses |
+| settings | Application-wide configuration (key-value) |
 
-── Spatie Permission Tables ──
-roles               ← Super Admin, Admin, Operator, Bendahara, Student
-permissions         ← Granular action permissions
-model_has_roles     ← Pivot: users ↔ roles
-role_has_permissions← Pivot: roles ↔ permissions
-```
+---
 
+# 🔐 Spatie Permission Tables
+
+| Table | Description |
+|---|---|
+| roles | Super Admin, Admin, Operator, Bendahara, Student |
+| permissions | Granular action permissions |
+| model_has_roles | Pivot: users ↔ roles |
+| role_has_permissions | Pivot: roles ↔ permissions |
 ---
 
 ## 🚀 Installation
@@ -150,67 +154,56 @@ role_has_permissions← Pivot: roles ↔ permissions
 **1. Clone the repository**
 
 ```bash
-git clone https://github.com/ranggautama47/myspp-school-management-system.git
+git clone [https://github.com/ranggautama47/myspp-school-management-system.git](https://github.com/ranggautama47/myspp-school-management-system.git)
 cd myspp-school-management-system
 ```
-
 **2. Install PHP & JS dependencies**
-
-```bash
-composer install
+``` Bash composer install
 npm install && npm run build
 ```
-
-**3. Setup environment**
-
-```bash
+**3. Setup environment** 
+```Bash
 cp .env.example .env
 php artisan key:generate
 ```
+**4. Configure database in <span style="background-color: #2d2d2d; color: #ffffff; padding: 2px 6px; border-radius: 4px;">.env</span>**
 
-**4. Configure database in `.env`**
+### Cuplikan kode :
 
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=myspp
-DB_USERNAME=root
-DB_PASSWORD=
-```
+<pre style="background-color: #2d2d2d; color: #f8f8f2; padding: 10px; border-radius: 5px;">
+<code style="color: #66d9ef;">DB_CONNECTION</code>=<span style="color: #a6e22e;">mysql</span>
+<code style="color: #66d9ef;">DB_HOST</code>=<span style="color: #a6e22e;">127.0.0.1</span>
+<code style="color: #66d9ef;">DB_PORT</code>=<span style="color: #e6db74;">3306</span>
+<code style="color: #66d9ef;">DB_DATABASE</code>=<span style="color: #a6e22e;">myspp</span>
+<code style="color: #66d9ef;">DB_USERNAME</code>=<span style="color: #a6e22e;">root</span>
+<code style="color: #66d9ef;">DB_PASSWORD</code>=<span style="color: #a6e22e;"></span>
+</code>
+</pre>
 
 **5. Run migrations & seeders**
-
-```bash
+```Bash
 php artisan migrate --seed
 ```
 
-**6. Link storage & start server**
-
-```bash
+**6. 🔗 Link storage & start server**
+```Bash
 php artisan storage:link
 php artisan serve
 ```
+<strong style="color: #4caf50;">🌐 Access:</strong>
 
-Visit `http://localhost:8000/admin`
-
----
+👉 <code>http://localhost:8000/admin</code>
 
 ## ⚙️ Configuration
-
-### Midtrans (Payment Gateway)
-
-Register at [midtrans.com](https://midtrans.com) and fill in `.env`:
-
-```env
+**Midtrans (Payment Gateway)**
+**Register at midtrans.com and fill in <span style="background-color: #2d2d2d; color: #ffffff; padding: 2px 6px; border-radius: 4px;">.env :</span>**
+```Cuplikan kode
 MIDTRANS_SERVER_KEY=SB-Mid-server-xxxxxxxxxxxx
 MIDTRANS_CLIENT_KEY=SB-Mid-client-xxxxxxxxxxxx
 MIDTRANS_IS_PRODUCTION=false
 ```
-
-### Email (Resend)
-
-```env
+## Email (Resend)
+```Cuplikan kode
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.resend.com
 MAIL_PORT=465
@@ -219,164 +212,119 @@ MAIL_PASSWORD=re_xxxxxxxxxxxx
 MAIL_FROM_ADDRESS=noreply@yourdomain.com
 MAIL_FROM_NAME="MySPP"
 ```
-
-### File Storage (Cloudinary)
-
-```env
+## File Storage (Cloudinary)
+```Cuplikan kode
 CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
 ```
-
----
-
 ## 👤 Default Accounts
+**After running <span style="background-color: #2d2d2d; color: #e21212; padding: 2px 6px; border-radius: 4px;">php artisan migrate --seed :</span>**
 
-After running `php artisan migrate --seed`:
+| Role | Email | Password |
+|------|-------|----------|
+| 👑 Super Admin | admin@myspp.com | password |
+| 🧑‍🎓 Student | student@myspp.com | password |
 
-| Role        | Email             | Password |
-| ----------- | ----------------- | -------- |
-| Super Admin | admin@myspp.com   | password |
-| Student     | student@myspp.com | password |
-
-**Admin Panel:** `http://localhost:8000/admin`
-
----
+🔗 **Admin Panel:** [http://localhost:8000/admin](http://localhost:8000/admin)
 
 ## 🔌 API Endpoints
 
-Base URL: `http://localhost:8000/api`
+**Base:** <span style="background-color: #2d2d2d; color: #ffffff; padding: 2px 6px; border-radius: 4px;">[php artisan migrate --seed :](http://localhost:8000/api)</span> 
 
-All endpoints (except auth) require header:
+📌**All endpoints** <span style="background-color: #2d2d2d; color: #55cdfc; padding: 2px 6px; border-radius: 4px;">(except auth)</span> require header:
+`Authorization: Bearer {token}`
 
-```
-Authorization: Bearer {token}
-```
+---
+### 🔐 Auth
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Login user |
+| POST | `/api/auth/register` | Register user |
+| POST | `/api/auth/logout` | Logout user |
+| GET | `/api/auth/me` | Get authenticated user |
+---
 
-### Auth
+### 🏢 Departments
+| Method | Endpoint | Role |
+|--------|----------|------|
+| GET | `/api/departments` | All users |
+| GET | `/api/departments/{id}` | All users |
+| POST | `/api/departments` | **Admin** |
+| PUT | `/api/departments/{id}` | **Admin** |
+| DELETE | `/api/departments/{id}` | **Admin** |
+---
 
-```http
-POST  /api/auth/login
-POST  /api/auth/register
-POST  /api/auth/logout
-GET   /api/auth/me
-```
+### 💰 Transactions
 
-### Departments
+| Method | Endpoint | Role |
+|--------|----------|------|
+| GET | `/api/transactions` | Admin: all, Student: own |
+| GET | `/api/transactions/{id}` | All users |
+| POST | `/api/transactions` | **Admin** |
+| POST | `/api/transactions/{id}/pay` | **Student** |
+| POST | `/api/transactions/{id}/approve` | **Admin** |
 
-```http
-GET   /api/departments
-GET   /api/departments/{id}
-POST  /api/departments          [Admin]
-PUT   /api/departments/{id}     [Admin]
-DELETE /api/departments/{id}    [Admin]
-```
+---
+### 💳 Midtrans
 
-### Transactions
-
-```http
-GET   /api/transactions         [Admin: all | Student: own]
-GET   /api/transactions/{id}
-POST  /api/transactions         [Admin]
-POST  /api/transactions/{id}/pay      [Student]
-POST  /api/transactions/{id}/approve  [Admin]
-```
-
-### Midtrans
-
-```http
-POST  /api/midtrans/snap-token  — Generate Snap token
-POST  /api/midtrans/webhook     — Receive Midtrans notification
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/midtrans/snap-token` | Generate Snap token |
+| POST | `/api/midtrans/webhook` | Receive Midtrans notification 
 
 ---
 
-## 📍 Project Status
+## 📋 Ringkasan Role & Akses
+| Role | Akses |
+|------|-------|
+| 👑 **Super Admin** | Semua endpoint (create, read, update, delete) |
+| 🧑‍🎓 **Student** | Read only, dan melakukan pembayaran (`/pay`) |
+---
 
+## 📍 Project Status
 ```
 Phase 1 — Backend Foundation     ✅ Complete
 Phase 2 — Filament Admin Panel   ✅ Complete
-Phase 3 — Midtrans Integration   🔄 In Progress
-Phase 4 — Student Portal         📋 Planned
+Phase 3 — Midtrans Integration   ✅ Complete
+Phase 4 — Student Portal         🔄 In Progress
 Phase 5 — Deployment             📋 Planned
 ```
+# 📊 Project Progress Report
 
-### Phase 1 — Backend Foundation ✅
-
-- [x] Database migrations (users, departments, transactions, payment_logs, students, classrooms, academic_years, invoices, expenses, settings)
-- [x] Eloquent models with relationships, scopes, and observers
-- [x] TransactionStatus, InvoiceStatus, ExpenseCategory, UserRole enums
-- [x] TransactionService, MidtransService, ReportService
-- [x] TransactionObserver + TransactionPolicy
-- [x] Form Requests (StoreTransaction, UploadProof, UpdateProfile, Login)
-- [x] REST API routes with Sanctum auth
-
-### Phase 2 — Filament Admin Panel ✅
-
-- [x] Dark enterprise theme (Slate 950 + Emerald primary)
-- [x] Custom brand logo and topbar profile
-- [x] Dashboard: StatsOverview, PaymentTrends, PaymentOverview, RecentTransactions widgets
-- [x] Academic module: Departments, Classrooms, Academic Years, Students
-- [x] Finance module: Payments, Invoices, Expenses, Finance Report (charts + Excel export)
-- [x] System module: Users, Roles (Spatie), Application Settings
-- [x] Role-based navigation: Super Admin, Admin, Operator, Bendahara, Student
-
-### Phase 3 — Midtrans Integration 🔄
-
-- [x] MidtransService structure (createSnapToken, handleWebhook, verifySignature)
-- [x] Webhook route and PaymentLog audit trail
-- [ ] Install `midtrans/midtrans-php` package
-- [ ] Test Snap token in sandbox mode
-- [ ] Test webhook with ngrok
-- [ ] Full payment flow: trigger → webhook → status update → PaymentLog
-
-### Phase 4 — Student Portal 📋
-
-- [ ] Student login page (Blade + Livewire)
-- [ ] Dashboard: bill status + payment history
-- [ ] Pay SPP via Midtrans Snap popup
-- [ ] Upload manual payment proof
-- [ ] Transaction history view
-
-### Phase 5 — Deployment 📋
-
-- [ ] Complete `.env.example`
-- [ ] ERD diagram in `/docs`
-- [ ] Deploy to Railway + PlanetScale
-- [ ] Set production environment variables
-- [ ] Live demo URL
+| Phase | Status | Components |
+|-------|--------|------------|
+| **Phase 1** — Backend Foundation | ✅ | Database migrations, Eloquent models (relationships, scopes, observers), Enums (TransactionStatus, InvoiceStatus, ExpenseCategory, UserRole), Services (Transaction, Midtrans, Report), TransactionObserver + Policy, Form Requests, REST API + Sanctum |
+| **Phase 2** — Filament Admin Panel | ✅ | Dark enterprise theme (Slate 950 + Emerald), Custom branding, Dashboard widgets (StatsOverview, PaymentTrends, PaymentOverview, RecentTransactions), Academic Module (Departments, Classrooms, Academic Years, Students), Finance Module (Payments, Invoices, Expenses, Report + Excel), System Module (Users, Roles, Settings), Role-based navigation |
+| **Phase 3** — Midtrans Integration | ✅ | MidtransService (createSnapToken, handleWebhook, verifySignature), Webhook + PaymentLog audit, midtrans/midtrans-php package, Sandbox + ngrok testing, Full payment flow |
+| **Phase 4** — Student Portal | 🔄 | Student login (Blade + Livewire), Dashboard (bill + history), Pay SPP (Midtrans Snap), Upload proof, Transaction history |
+| **Phase 5** — Deployment | ⬜ | .env.example, ERD diagram in /docs, Deploy to Railway + PlanetScale, Production env vars, Live demo URL |
 
 ---
 
 ## 📸 Screenshots
 
-> Screenshots will be added after Phase 3 completion.
+> ⏳ *Screenshots will be added after Phase 4 completion.*
 
-| Admin Dashboard | Finance Report |
-| :-------------: | :------------: |
-|  _coming soon_  | _coming soon_  |
-
-| Payments Management | Student Management |
-| :-----------------: | :----------------: |
-|    _coming soon_    |   _coming soon_    |
+| Module | Preview |
+|--------|---------|
+| Admin Dashboard | ![Dashboard](screenshot/Admin%20Dashboard.png) |
+| Finance Report | ![Finance Report](screenshot/Finance-Report.png) |
+| Payments Management | ![Payments Management](screenshot/Payments-Management.png) |
+| Student Management | ![Coming Soon](https://via.placeholder.com/400x200?text=Student+Management+Coming+Soon) |
 
 ---
 
 ## 👨‍💻 Developer
 
-**Rangga Utama**
-Full-stack Web Developer · Laravel & Filament Enthusiast
-
-[![GitHub](https://img.shields.io/badge/GitHub-@ranggautama47-181717?style=flat&logo=github)](https://github.com/ranggautama47)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-rangga--utama-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/in/rangga-utama-6bb76b362/)
+<div align="left">
+  <strong>Rangga Utama</strong><br />
+  <em>Full-stack Web Developer · Laravel & Filament Enthusiast</em>
+</div>
 
 ---
 
 ## 📄 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-<div align="center">
-  <p>⭐ If you find this project useful, consider giving it a star!</p>
-  <p>Made with ❤️ in Indonesia</p>
+<div align="left">
+  Distributed under the <strong>MIT License</strong>.<br />
+  See <a href="https://github.com/username_0/LICENSE">LICENSE</a> for more information.
 </div>
