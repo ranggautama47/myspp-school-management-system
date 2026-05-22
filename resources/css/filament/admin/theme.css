@@ -469,7 +469,6 @@
     background: #94a3b8;
 }
 
-
 /*
  * =============================================
  * TAMBAHAN CSS — append ke theme.css yang sudah ada
@@ -549,5 +548,5 @@
 .fi-user-menu-trigger > svg:last-child {
     width: 14px !important;
     height: 14px !important;
-    color: #64748B !important;
+    color: #64748b !important;
 }
