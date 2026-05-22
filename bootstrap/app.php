@@ -15,7 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/midtrans/webhook', // WAJIB ada ini
         ]);
-        //
+
+        // Daftarkan alias middleware student.only
+        $middleware->alias([
+            'student.only' => \App\Http\Middleware\StudentOnly::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
