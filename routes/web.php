@@ -29,6 +29,9 @@ Route::middleware(['auth', 'student.only'])->group(function () {
         Route::post('/{transaction}/upload-proof',  [PaymentController::class, 'uploadProof'])->name('.upload-proof');
     });
 
+    // Invoices
+    Route::post('/invoices/{invoice}/checkout', [PaymentController::class, 'checkoutInvoice'])->name('student.invoices.checkout');
+
     // Profile
     Route::get('/profile',           [ProfileController::class, 'edit'])->name('student.profile');
     Route::put('/profile',           [ProfileController::class, 'update'])->name('student.profile.update');

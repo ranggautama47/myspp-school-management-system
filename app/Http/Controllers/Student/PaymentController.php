@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Enums\TransactionStatus;
+use App\Models\Invoice;
 use App\Models\Transaction;
 use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
@@ -125,5 +127,48 @@ class PaymentController extends Controller
         $transaction->update(['proof_of_payment' => $path]);
 
         return back()->with('success', 'Bukti pembayaran berhasil diupload. Admin akan memverifikasi segera.');
+    }
+
+    // =========================================
+    // CHECKOUT INVOICE — ubah tagihan menjadi transaksi pending
+    // POST /invoices/{invoice}/checkout
+    // =========================================
+
+    public function checkoutInvoice(Request $request, Invoice $invoice): RedirectResponse
+    {
+        // Guard: pastikan invoice ini milik student yang sedang login
+        abort_unless(
+            $invoice->student_id === $request->user()->student?->id,
+            403,
+            'Tagihan ini bukan milik Anda.'
+        );
+
+        // Guard: pastikan invoice masih bisa dibayar (unpaid atau overdue)
+        if (!$invoice->canBePaid()) {
+            return back()->with('error', 'Tagihan ini tidak dapat dibayar atau sudah lunas.');
+        }
+
+        // Cek apakah invoice ini sudah terhubung ke transaksi yang pending
+        if ($invoice->transaction_id) {
+            $existingTx = Transaction::find($invoice->transaction_id);
+            if ($existingTx && $existingTx->isPending()) {
+                return redirect()->route('student.transactions.show', $existingTx)
+                    ->with('info', 'Anda sudah memiliki transaksi aktif untuk tagihan ini. Silakan lanjutkan pembayaran.');
+            }
+        }
+
+        // Buat transaksi baru
+        $transaction = Transaction::create([
+            'user_id'        => $request->user()->id,
+            'department_id'  => $invoice->department_id,
+            'amount'         => $invoice->amount,
+            'payment_status' => TransactionStatus::Pending,
+        ]);
+
+        // Hubungkan invoice ke transaksi ini
+        $invoice->update(['transaction_id' => $transaction->id]);
+
+        return redirect()->route('student.transactions.show', $transaction)
+            ->with('success', 'Transaksi berhasil dibuat. Silakan pilih metode pembayaran.');
     }
 }

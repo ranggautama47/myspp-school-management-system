@@ -100,10 +100,12 @@
                                 · Jatuh tempo: {{ $invoice->due_date?->format('d M Y') }}
                             </p>
                         </div>
-                        <a href="{{ route('student.transactions') }}"
-                           class="shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
-                            Bayar
-                        </a>
+                        <form action="{{ route('student.invoices.checkout', $invoice) }}" method="POST" class="shrink-0">
+                            @csrf
+                            <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
+                                Bayar
+                            </button>
+                        </form>
                     </div>
                 @endforeach
             </div>

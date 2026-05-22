@@ -326,5 +326,6 @@ Phase 5 — Deployment             📋 Planned
 
 <div align="left">
   Distributed under the <strong>MIT License</strong>.<br />
-  See <a href="https://github.com/username_0/LICENSE">LICENSE</a> for more information.
+  
+See full license [here](LICENSE). for more information.
 </div>
