@@ -22,7 +22,7 @@ class TransactionController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user  = $request->user();
         $query = Transaction::with(['user', 'department'])->latest();
 
         // Student hanya lihat transaksi milik sendiri
@@ -41,8 +41,8 @@ class TransactionController extends Controller
             'data' => $transactions->items(),
             'meta' => [
                 'current_page' => $transactions->currentPage(),
-                'last_page' => $transactions->lastPage(),
-                'total' => $transactions->total(),
+                'last_page'    => $transactions->lastPage(),
+                'total'        => $transactions->total(),
             ],
         ]);
     }
@@ -79,22 +79,22 @@ class TransactionController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->hasRole(['admin', 'super admin', 'operator'])) {
+        if (! $user->hasRole(['admin', 'super admin', 'operator'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
         $validated = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
-            'department_id' => ['required', 'exists:departments,id'],
+            'user_id'        => ['required', 'exists:users,id'],
+            'department_id'  => ['required', 'exists:departments,id'],
             'payment_method' => ['nullable', 'in:bank_transfer,e_wallet,manual'],
         ]);
 
         $department = Department::findOrFail($validated['department_id']);
 
         $transaction = Transaction::create([
-            'user_id' => $validated['user_id'],
-            'department_id' => $validated['department_id'],
-            'amount' => $department->cost,
+            'user_id'        => $validated['user_id'],
+            'department_id'  => $validated['department_id'],
+            'amount'         => $department->cost,
             'payment_method' => $validated['payment_method'] ?? 'manual',
             'payment_status' => TransactionStatus::Pending,
         ]);
@@ -103,7 +103,7 @@ class TransactionController extends Controller
 
         return response()->json([
             'message' => 'Transaksi berhasil dibuat.',
-            'data' => $this->formatTransaction($transaction),
+            'data'    => $this->formatTransaction($transaction),
         ], 201);
     }
 
@@ -123,7 +123,7 @@ class TransactionController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        if (!$transaction->canBePaid()) {
+        if (! $transaction->canBePaid()) {
             return response()->json([
                 'message' => 'Transaksi tidak bisa dibayar. Status saat ini: ' . $transaction->payment_status->label(),
             ], 422);
@@ -132,8 +132,8 @@ class TransactionController extends Controller
         // Kembalikan snap token yang sudah ada jika masih valid
         if ($transaction->snap_token) {
             return response()->json([
-                'snap_token' => $transaction->snap_token,
-                'client_key' => config('services.midtrans.client_key'),
+                'snap_token'    => $transaction->snap_token,
+                'client_key'    => config('services.midtrans.client_key'),
                 'is_production' => config('services.midtrans.is_production'),
             ]);
         }
@@ -144,8 +144,8 @@ class TransactionController extends Controller
             $snapToken = $midtransService->createSnapToken($transaction);
 
             return response()->json([
-                'snap_token' => $snapToken,
-                'client_key' => config('services.midtrans.client_key'),
+                'snap_token'    => $snapToken,
+                'client_key'    => config('services.midtrans.client_key'),
                 'is_production' => config('services.midtrans.is_production'),
             ]);
         } catch (\Exception $e) {
@@ -165,11 +165,11 @@ class TransactionController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->hasRole(['admin', 'super admin', 'bendahara'])) {
+        if (! $user->hasRole(['admin', 'super admin', 'bendahara'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        if (!$transaction->isPending()) {
+        if (! $transaction->isPending()) {
             return response()->json([
                 'message' => 'Hanya transaksi pending yang bisa di-approve.',
             ], 422);
@@ -181,7 +181,7 @@ class TransactionController extends Controller
 
         return response()->json([
             'message' => 'Transaksi berhasil di-approve.',
-            'data' => $this->formatTransaction($transaction->fresh()),
+            'data'    => $this->formatTransaction($transaction->fresh()),
         ]);
     }
 
@@ -201,7 +201,7 @@ class TransactionController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        if (!$transaction->isPending()) {
+        if (! $transaction->isPending()) {
             return response()->json([
                 'message' => 'Bukti bayar hanya bisa diupload untuk transaksi yang masih pending.',
             ], 422);
@@ -223,8 +223,8 @@ class TransactionController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Bukti pembayaran berhasil diupload.',
-            'proof_url' => Storage::url($path),
+            'message'    => 'Bukti pembayaran berhasil diupload.',
+            'proof_url'  => Storage::url($path),
         ]);
     }
 
@@ -235,9 +235,9 @@ class TransactionController extends Controller
     private function formatTransaction(Transaction $transaction): array
     {
         return [
-            'id' => $transaction->id,
-            'code' => $transaction->code,
-            'amount' => (int) $transaction->amount,
+            'id'             => $transaction->id,
+            'code'           => $transaction->code,
+            'amount'         => (int) $transaction->amount,
             'amount_display' => 'Rp ' . number_format((float) $transaction->amount, 0, ',', '.'),
             'payment_method' => $transaction->payment_method,
             'payment_status' => [
@@ -245,20 +245,20 @@ class TransactionController extends Controller
                 'label' => $transaction->payment_status->label(),
                 'color' => $transaction->payment_status->color(),
             ],
-            'snap_token' => $transaction->snap_token,
-            'proof_of_payment' => $transaction->proof_of_payment
+            'snap_token'        => $transaction->snap_token,
+            'proof_of_payment'  => $transaction->proof_of_payment
                 ? Storage::url($transaction->proof_of_payment)
                 : null,
-            'paid_at' => $transaction->paid_at?->format('Y-m-d H:i:s'),
+            'paid_at'    => $transaction->paid_at?->format('Y-m-d H:i:s'),
             'created_at' => $transaction->created_at?->format('Y-m-d H:i:s'),
             'user' => $transaction->user ? [
-                'id' => $transaction->user->id,
-                'name' => $transaction->user->name,
+                'id'    => $transaction->user->id,
+                'name'  => $transaction->user->name,
                 'email' => $transaction->user->email,
             ] : null,
             'department' => $transaction->department ? [
-                'id' => $transaction->department->id,
-                'name' => $transaction->department->name,
+                'id'       => $transaction->department->id,
+                'name'     => $transaction->department->name,
                 'semester' => $transaction->department->semester,
             ] : null,
         ];

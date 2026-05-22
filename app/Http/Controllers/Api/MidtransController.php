@@ -13,8 +13,7 @@ class MidtransController extends Controller
 {
     public function __construct(
         private readonly MidtransService $midtransService
-    ) {
-    }
+    ) {}
 
     // =========================================
     // SNAP TOKEN
@@ -37,8 +36,8 @@ class MidtransController extends Controller
 
         // Guard: student hanya bisa request token untuk transaksinya sendiri
         if (
-            !$request->user()->hasRole('admin') &&
-            !$request->user()->hasRole('super admin')
+            ! $request->user()->hasRole('admin') &&
+            ! $request->user()->hasRole('super admin')
         ) {
             if ($transaction->user_id !== $request->user()->id) {
                 return response()->json([
@@ -48,7 +47,7 @@ class MidtransController extends Controller
         }
 
         // Guard: hanya transaksi pending yang bisa dibayar
-        if (!$transaction->canBePaid()) {
+        if (! $transaction->canBePaid()) {
             return response()->json([
                 'message' => 'Transaksi ini tidak bisa dibayar. Status: ' . $transaction->payment_status->label(),
             ], 422);
@@ -58,11 +57,11 @@ class MidtransController extends Controller
             $snapToken = $this->midtransService->createSnapToken($transaction);
 
             return response()->json([
-                'snap_token' => $snapToken,
-                'client_key' => config('services.midtrans.client_key'),
+                'snap_token'   => $snapToken,
+                'client_key'   => config('services.midtrans.client_key'),
                 'is_production' => config('services.midtrans.is_production'),
-                'transaction' => [
-                    'code' => $transaction->code,
+                'transaction'  => [
+                    'code'   => $transaction->code,
                     'amount' => (int) $transaction->amount,
                 ],
             ]);
@@ -91,7 +90,7 @@ class MidtransController extends Controller
         // Log raw payload untuk debugging (hapus di production jika tidak perlu)
         \Illuminate\Support\Facades\Log::info('Midtrans webhook received', [
             'order_id' => $payload['order_id'] ?? 'unknown',
-            'status' => $payload['transaction_status'] ?? 'unknown',
+            'status'   => $payload['transaction_status'] ?? 'unknown',
         ]);
 
         try {
