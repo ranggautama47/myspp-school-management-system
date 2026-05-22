@@ -97,6 +97,19 @@
                                           file:cursor-pointer cursor-pointer">
                             <p class="text-xs text-slate-600 mt-1">JPG/PNG, maks 2MB</p>
                         </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Scan Ijazah</label>
+                            <input type="file" name="scan_ijazah" accept=".jpg,.jpeg,.png,.pdf"
+                                   class="w-full text-sm text-slate-400 file:mr-3 file:py-1.5 file:px-3
+                                          file:rounded-lg file:border-0 file:text-xs file:font-medium
+                                          file:bg-slate-700 file:text-slate-300 hover:file:bg-slate-600
+                                          file:cursor-pointer cursor-pointer">
+                            <p class="text-xs text-slate-600 mt-1">JPG/PNG/PDF, maks 2MB</p>
+                            @if(auth()->user()->scan_ijazah)
+                                <a href="{{ Storage::url(auth()->user()->scan_ijazah) }}" target="_blank" class="text-emerald-400 text-xs mt-1 inline-block hover:underline">Lihat Dokumen Saat Ini</a>
+                            @endif
+                        </div>
                     </div>
 
                     <div class="flex justify-end pt-2">

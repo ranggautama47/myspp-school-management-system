@@ -28,10 +28,15 @@ class ProfileController extends Controller
             'email' => ['required', 'email', 'unique:users,email,' . $user->id],
             'phone' => ['nullable', 'string', 'max:20'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'scan_ijazah' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ]);
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('profile-photos', 'public');
+        }
+
+        if ($request->hasFile('scan_ijazah')) {
+            $validated['scan_ijazah'] = $request->file('scan_ijazah')->store('scan-ijazah', 'public');
         }
 
         $user->update($validated);
