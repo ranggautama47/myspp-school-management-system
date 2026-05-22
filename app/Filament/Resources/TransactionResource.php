@@ -18,12 +18,12 @@ class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static ?string $navigationGroup = 'Finance';
-    protected static ?string $navigationLabel = 'Payments';
-    protected static ?string $modelLabel = 'Payment';
+    protected static ?string $navigationIcon   = 'heroicon-o-document-text';
+    protected static ?string $navigationGroup  = 'Finance';
+    protected static ?string $navigationLabel  = 'Payments';
+    protected static ?string $modelLabel       = 'Payment';
     protected static ?string $pluralModelLabel = 'Payments';
-    protected static ?int $navigationSort = 1;
+    protected static ?int    $navigationSort   = 1;
 
     protected static ?string $recordTitleAttribute = 'code';
 
@@ -81,7 +81,7 @@ class TransactionResource extends Resource
                         ->required()
                         ->extraInputAttributes([
                             'x-mask:dynamic' => '$money($input, ".")',
-                            'inputmode' => 'numeric',
+                            'inputmode'      => 'numeric',
                         ])
                         ->dehydrateStateUsing(fn($state) => (int) preg_replace('/[^0-9]/', '', (string) $state)),
 
@@ -89,8 +89,8 @@ class TransactionResource extends Resource
                         ->label('Payment Method')
                         ->options([
                             'bank_transfer' => 'Bank Transfer',
-                            'e_wallet' => 'E-Wallet',
-                            'manual' => 'Manual Payment',
+                            'e_wallet'      => 'E-Wallet',
+                            'manual'        => 'Manual Payment',
                         ])
                         ->required()
                         ->native(false),
@@ -168,14 +168,50 @@ class TransactionResource extends Resource
                     ->options(TransactionStatus::options()),
             ])
             ->actions([
+
+                // ── TEST PAY ──────────────────────────────────────────
+                // Muncul hanya di baris Pending
+                // Generate snap token → redirect ke TestPay page
+                Tables\Actions\Action::make('test_pay')
+                    ->label('Test Pay')
+                    ->icon('heroicon-o-credit-card')
+                    ->color('success')
+                    ->visible(
+                        fn(Transaction $record) =>
+                        $record->payment_status === TransactionStatus::Pending
+                    )
+                    ->action(function (Transaction $record) {
+                        try {
+                            $service   = app(\App\Services\MidtransService::class);
+                            $snapToken = $service->createSnapToken($record);
+
+                            return redirect()->route('filament.admin.pages.test-pay', [
+                                'token'          => $snapToken,
+                                'transaction_id' => $record->id,
+                                'code'           => $record->code,
+                                'amount'         => (int) $record->amount,
+                            ]);
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Gagal generate Snap Token')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
+                // ── APPROVE (manual) ──────────────────────────────────
                 Tables\Actions\Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
-                    ->color('success')
+                    ->color('info')
                     ->requiresConfirmation()
                     ->modalHeading('Approve Payment')
-                    ->modalDescription('Yakin ingin approve pembayaran ini? Aksi ini tidak bisa dibatalkan.')
-                    ->visible(fn(Transaction $record) => $record->payment_status === TransactionStatus::Pending)
+                    ->modalDescription('Tandai transaksi ini sebagai lunas secara manual? Aksi ini tidak bisa dibatalkan.')
+                    ->visible(
+                        fn(Transaction $record) =>
+                        $record->payment_status === TransactionStatus::Pending
+                    )
                     ->action(function (Transaction $record) {
                         $record->markAsPaid($record->payment_method ?? 'manual');
 
@@ -213,14 +249,15 @@ class TransactionResource extends Resource
     }
 
     // =========================================
-    // PAGES
+    // PAGES — semua 3 page harus ada filenya
     // =========================================
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTransactions::route('/'),
-            'edit' => Pages\EditTransaction::route('/{record}/edit'),
+            'index'  => Pages\ListTransactions::route('/'),
+            'create' => Pages\CreateTransaction::route('/create'),
+            'edit'   => Pages\EditTransaction::route('/{record}/edit'),
         ];
     }
 
@@ -231,7 +268,6 @@ class TransactionResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         $count = static::getModel()::pending()->count();
-
         return $count > 0 ? (string) $count : null;
     }
 

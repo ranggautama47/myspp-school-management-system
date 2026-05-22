@@ -17,16 +17,19 @@ class ListTransactions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            // Label "Manual Payment" lebih jelas dari "New Payment"
+            // Menjelaskan ke admin: ini untuk bayar tunai/transfer manual
+            // bukan via Midtrans Snap
             Actions\CreateAction::make()
-                ->label('New Payment')
-                ->icon('heroicon-o-plus'),
+                ->label('Manual Payment')
+                ->icon('heroicon-o-banknotes')
+                ->color('gray'),
         ];
     }
 
     // =========================================
     // TABS — All / Pending / Paid / Expired
-    // Fix: badge pakai closure fn() => ... bukan static value
-    // Supaya badge count selalu fresh setiap render, bukan snapshot saat boot
+    // Badge pakai closure fn() agar selalu fresh
     // =========================================
 
     public function getTabs(): array
