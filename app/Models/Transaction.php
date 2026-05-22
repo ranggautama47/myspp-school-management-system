@@ -58,7 +58,7 @@ class Transaction extends Model
     public static function generateCode(): string
     {
         for ($i = 0; $i < 5; $i++) {
-            $code = 'TRX-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
+            $code = 'TRX-' . now('Asia/Jakarta')->format('Ymd') . '-' . strtoupper(Str::random(5));
 
             if (! self::withTrashed()->where('code', $code)->exists()) {
                 return $code;
@@ -113,8 +113,8 @@ class Transaction extends Model
 
     public function scopeThisMonth($query)
     {
-        return $query->whereMonth('transactions.created_at', now()->month)
-            ->whereYear('transactions.created_at', now()->year);
+        return $query->whereMonth('transactions.created_at', now('Asia/Jakarta')->month)
+            ->whereYear('transactions.created_at', now('Asia/Jakarta')->year);
     }
 
     // =========================================
@@ -151,7 +151,7 @@ class Transaction extends Model
         $this->update([
             'payment_status' => TransactionStatus::Paid,
             'payment_method' => $paymentMethod,
-            'paid_at'        => now(),
+            'paid_at'        => now('Asia/Jakarta'),
         ]);
     }
 
