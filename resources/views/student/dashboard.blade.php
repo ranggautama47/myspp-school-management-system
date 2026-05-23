@@ -65,7 +65,6 @@
             <p class="text-2xl font-bold text-rose-500">{{ $pendingInvoices->count() }}</p>
             <p class="text-xs text-slate-500 mt-1">tagihan aktif</p>
         </div>
-
     </div>
 
     {{-- ── Tagihan Aktif (Invoice) ─────────────────────────────────── --}}
@@ -99,13 +98,34 @@
                                 {{ $invoice->department?->name ?? '-' }}
                                 · Jatuh tempo: {{ $invoice->due_date?->format('d M Y') }}
                             </p>
+
+                            @if($invoice->notes)
+                                <div class="mt-4 pt-3 border-t border-slate-700">
+                                    <div class="flex items-start gap-2 text-sm text-slate-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mt-0.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p>
+                                            <span class="font-medium text-slate-300">Catatan dari Sekolah:</span> 
+                                            {{ $invoice->notes }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
-                        <form action="{{ route('student.invoices.checkout', $invoice) }}" method="POST" class="shrink-0">
-                            @csrf
-                            <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
-                                Bayar
-                            </button>
-                        </form>
+                        @if($invoice->transaction && $invoice->transaction->isPending())
+                            <a href="{{ route('student.transactions.show', $invoice->transaction) }}"
+                               class="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors text-center">
+                                Menunggu Pembayaran
+                            </a>
+                        @else
+                            <form action="{{ route('student.invoices.checkout', $invoice) }}" method="POST" class="shrink-0">
+                                @csrf
+                                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
+                                    Bayar
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 @endforeach
             </div>
