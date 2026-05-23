@@ -224,7 +224,7 @@ class TransactionController extends Controller
 
         return response()->json([
             'message'    => 'Bukti pembayaran berhasil diupload.',
-            'proof_url'  => Storage::url($path),
+            'proof_url'  => url(Storage::url($path)),
         ]);
     }
 
@@ -247,7 +247,7 @@ class TransactionController extends Controller
             ],
             'snap_token'        => $transaction->snap_token,
             'proof_of_payment'  => $transaction->proof_of_payment
-                ? Storage::url($transaction->proof_of_payment)
+                ? url(Storage::url($transaction->proof_of_payment))
                 : null,
             'paid_at'    => $transaction->paid_at?->format('Y-m-d H:i:s'),
             'created_at' => $transaction->created_at?->format('Y-m-d H:i:s'),
