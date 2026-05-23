@@ -87,6 +87,11 @@ class Transaction extends Model
         return $this->hasMany(PaymentLog::class);
     }
 
+    public function invoice(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
     // =========================================
     // SCOPES
     // =========================================
@@ -153,6 +158,11 @@ class Transaction extends Model
             'payment_method' => $paymentMethod,
             'paid_at'        => now('Asia/Jakarta'),
         ]);
+
+        // Sinkronisasi dengan invoice jika ada
+        if ($this->invoice) {
+            $this->invoice->markAsPaid($this);
+        }
     }
 
     /**

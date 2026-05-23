@@ -67,7 +67,8 @@ class InvoiceResource extends Resource
                             if ($student && $student->department) {
                                 $set('department_id', $student->department_id);
                                 $cost = $student->department->cost;
-                                $set('amount', number_format((float) $cost, 0, ',', '.'));
+                                // Use raw numeric amount so the Filament money/mask displays formatted value
+                                $set('amount', (int) $cost);
                             }
                         }),
 
@@ -84,7 +85,7 @@ class InvoiceResource extends Resource
                             if ($state) {
                                 $dept = \App\Models\Department::find($state);
                                 if ($dept) {
-                                    $set('amount', number_format((float) $dept->cost, 0, ',', '.'));
+                                    $set('amount', (int) $dept->cost);
                                 }
                             }
                         }),
@@ -207,15 +208,31 @@ class InvoiceResource extends Resource
                     ->modalDescription('Tandai invoice ini sebagai lunas? Transaksi akan dibuat otomatis.')
                     ->visible(fn(Invoice $record) => $record->canBePaid())
                     ->action(function (Invoice $record) {
-                        // Buat Transaction otomatis untuk audit trail
-                        $transaction = Transaction::create([
-                            'user_id' => $record->student->user_id,
-                            'department_id' => $record->department_id,
-                            'amount' => $record->amount,
-                            'payment_method' => 'manual',
-                            'payment_status' => TransactionStatus::Paid,
-                            'paid_at' => now(),
-                        ]);
+                        $transaction = null;
+
+                        if ($record->transaction_id) {
+                            $existingTx = Transaction::find($record->transaction_id);
+                            if ($existingTx && !$existingTx->isPaid()) {
+                                $existingTx->update([
+                                    'payment_method' => 'manual',
+                                    'payment_status' => TransactionStatus::Paid,
+                                    'paid_at' => now(),
+                                ]);
+                                $transaction = $existingTx;
+                            }
+                        }
+
+                        if (!$transaction) {
+                            // Buat Transaction otomatis untuk audit trail jika belum ada
+                            $transaction = Transaction::create([
+                                'user_id' => $record->student->user_id,
+                                'department_id' => $record->department_id,
+                                'amount' => $record->amount,
+                                'payment_method' => 'manual',
+                                'payment_status' => TransactionStatus::Paid,
+                                'paid_at' => now(),
+                            ]);
+                        }
 
                         $record->markAsPaid($transaction);
 

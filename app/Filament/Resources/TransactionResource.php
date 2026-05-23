@@ -63,7 +63,8 @@ class TransactionResource extends Resource
                             if ($student) {
                                 $set('department_id', $student->department_id);
                                 $cost = \App\Models\Department::find($student->department_id)?->cost;
-                                $set('amount', $cost ? number_format((float) $cost, 0, ',', '.') : null);
+                                // Set raw numeric amount so the frontend mask formats it correctly
+                                $set('amount', $cost ? (int) $cost : null);
                             }
                         }),
 
