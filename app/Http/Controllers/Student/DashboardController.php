@@ -20,7 +20,7 @@ class DashboardController extends Controller
         // Invoice yang belum dibayar (unpaid + overdue)
         $pendingInvoices = Invoice::where('student_id', $student?->id)
             ->whereIn('status', ['unpaid', 'overdue'])
-            ->with('department')
+            ->with(['department', 'transaction'])
             ->orderBy('due_date', 'asc')
             ->get();
 

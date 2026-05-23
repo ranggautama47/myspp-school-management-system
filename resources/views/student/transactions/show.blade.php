@@ -79,7 +79,7 @@
                     <div class="px-5 py-4 border-b border-slate-800">
                         <h3 class="font-medium text-white text-sm">Upload Bukti Bayar Manual</h3>
                         <p class="text-xs text-slate-400 mt-1">
-                            Jika bayar via transfer manual, upload bukti transfer untuk diverifikasi admin.
+                            Jika bayar via bagian keuangan minta kwitansi, upload bukti tanda pembayaran  untuk diverifikasi admin.
                         </p>
                     </div>
                     <form method="POST"
