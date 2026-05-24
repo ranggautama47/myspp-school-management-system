@@ -6,9 +6,22 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>Dashboard — MySPP</title>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/android-chrome-512x512.png') }}">
-    <link rel="shortcut icon" href="{{ asset('images/favicon.png') }}" type="image/png">
+    <!-- Favicon / Browser Tab Icon (PWA tap) -->
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="512x512"
+        href="{{ asset('images/android-chrome-512x512.png') }}"
+    />
+    <link
+        rel="shortcut icon"
+        href="{{ asset('images/favicon.png') }}"
+        type="image/png"
+    />
+    <link
+        rel="apple-touch-icon"
+        href="{{ asset('images/android-chrome-512x512.png') }}"
+    />
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -142,19 +155,105 @@
                 </div>
 
                 <div class="flex items-center gap-3" x-data="{ open: false }">
-                    {{-- Notification bell --}}
-                    <button
-                        class="relative w-8 h-8 bg-slate-800 border border-slate-700 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors"
-                    >
-                        <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        @if ($totalPending > 0)
-                            <span
-                                class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-amber-400 rounded-full border border-slate-950"
-                            ></span>
-                        @endif
-                    </button>
+                    {{-- Notification Bell Wrapper --}}
+                    <div class="relative" x-data="{ openNotifications: false }">
+                        {{-- Tombol Lonceng --}}
+                        <button
+                            @click="openNotifications = !openNotifications"
+                            class="relative w-8 h-8 bg-slate-800 border border-slate-700 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors cursor-pointer"
+                        >
+                            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            {{-- Dot Kuning jika ada notifikasi aktif --}}
+                            @if ($totalPending > 0)
+                                <span
+                                    class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-amber-400 rounded-full border border-slate-950"
+                                ></span>
+                            @endif
+                        </button>
+
+                        {{-- Popover Panel Notifikasi --}}
+                        <div
+                            x-show="openNotifications"
+                            @click.outside="openNotifications = false"
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95 translate-y-[-10px]"
+                            x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 scale-95 translate-y-[-10px]"
+                            class="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden"
+                            style="display: none"
+                        >
+                            {{-- Header Popover --}}
+                            <div
+                                class="px-4 py-3 border-b border-slate-700 flex items-center justify-between bg-slate-850"
+                            >
+                                <span
+                                    class="text-xs font-semibold text-slate-200"
+                                    >Notifications</span
+                                >
+                                <button
+                                    @click="openNotifications = false"
+                                    class="text-slate-400 hover:text-white transition-colors"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {{-- List Item Notifikasi (Sesuai Konsep Otomatisasi Sistem/Email) --}}
+                            <div
+                                class="max-h-64 overflow-y-auto divide-y divide-slate-700/60"
+                            >
+                                @if ($totalPending > 0)
+                                    {{-- Item 1: Tagihan Baru --}}
+                                    <div
+                                        class="p-3.5 hover:bg-slate-750 transition-colors flex gap-3 items-start group"
+                                    >
+                                        <div
+                                            class="w-2 h-2 bg-amber-400 rounded-full mt-1.5 flex-shrink-0"
+                                        ></div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-xs font-medium text-slate-200 group-hover:text-emerald-400 transition-colors">New Invoice Created</p>
+                                            <p class="text-[11px] text-slate-400 mt-0.5 truncate">Tagihan Current Semester Fee Rp 2.500.000 telah diterbitkan.</p>
+                                            <p class="text-[9px] text-slate-500 mt-1">Just now</p>
+                                        </div>
+                                    </div>
+                                    {{-- Item 2: Pengingat Email --}}
+                                    <div
+                                        class="p-3.5 hover:bg-slate-750 transition-colors flex gap-3 items-start group"
+                                    >
+                                        <div
+                                            class="w-2 h-2 bg-transparent rounded-full mt-1.5 flex-shrink-0"
+                                        ></div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-xs font-medium text-slate-200">Email System Queue</p>
+                                            <p class="text-[11px] text-slate-400 mt-0.5 truncate">Notifikasi pengingat pembayaran sukses dikirim ke email kamu.</p>
+                                            <p class="text-[9px] text-slate-500 mt-1">2 hours ago</p>
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- State Jika Kosong --}}
+                                    <div class="py-8 text-center">
+                                        <p class="text-xs text-slate-500">No new notifications</p>
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Footer Popover --}}
+                            <div class="border-t border-slate-700 bg-slate-850">
+                                <a
+                                    href="#"
+                                    class="block text-center py-2 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 hover:bg-slate-750 transition-colors"
+                                >
+                                    View All Notifications
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
                     {{-- Avatar dropdown --}}
                     <div class="relative">
@@ -415,139 +514,139 @@
                                         </div>
                                     </div>
 
-                                        {{-- BAGIAN KANAN: Icon Payment (Ditarik keluar sejajar dengan judul Kiri) --}}
-                                        <div
-                                            class="hidden md:flex w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 items-center justify-center overflow-hidden flex-shrink-0 mt-2"
-                                        >
-                                            <img
-                                                src="{{ asset('images/iconPayment.png') }}"
-                                                alt="Payment"
-                                                class="w-16 h-16 md:w-20 md:h-20 object-contain scale-125 opacity-90"
-                                            />
-                                        </div>
+                                    {{-- BAGIAN KANAN: Icon Payment (Ditarik keluar sejajar dengan judul Kiri) --}}
+                                    <div
+                                        class="hidden md:flex w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 items-center justify-center overflow-hidden flex-shrink-0 mt-2"
+                                    >
+                                        <img
+                                            src="{{ asset('images/iconPayment.png') }}"
+                                            alt="Payment"
+                                            class="w-16 h-16 md:w-20 md:h-20 object-contain scale-125 opacity-90"
+                                        />
                                     </div>
+                                </div>
 
-                                    <div class="payment-action-wrapper">
-                                        {{-- Bayar Button --}}
-                                        @if ($invoice->transaction_id)
-                                            @php
-                                                $pendingTx = \App\Models\Transaction::find($invoice->transaction_id);
-                                            @endphp
-                                            @if ($pendingTx && $pendingTx->isPending())
-                                                <a
-                                                    href="{{ route('student.transactions.show', $pendingTx) }}"
-                                                    class="relative w-full flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold py-4 rounded-2xl transition-all duration-300 mb-3 shadow-[0_0_25px_rgba(245,158,11,0.25)] hover:shadow-[0_0_35px_rgba(245,158,11,0.45)]"
-                                                >
-                                                    {{-- Left Icon --}}
-                                                    <svg
-                                                        class="w-5 h-5 absolute left-5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                        stroke-width="2"
-                                                    >
-                                                        <circle cx="12" cy="12" r="10" />
-                                                        <path d="M12 8v4l3 3" />
-                                                    </svg>
-
-                                                    {{-- Center Text --}}
-                                                    <span
-                                                        class="text-center tracking-wide"
-                                                    >
-                                                        Menunggu Pembayaran
-                                                    </span>
-
-                                                    {{-- Right Arrow --}}
-                                                    <svg
-                                                        class="w-5 h-5 absolute right-5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                        stroke-width="2"
-                                                    >
-                                                        <path d="M5 12h14M12 5l7 7-7 7" />
-                                                    </svg>
-                                                </a>
-
-                                            @endif
-
-                                        @else
-                                            <form
-                                                method="POST"
-                                                action="{{ route('student.invoices.checkout', $invoice) }}"
+                                <div class="payment-action-wrapper">
+                                    {{-- Bayar Button --}}
+                                    @if ($invoice->transaction_id)
+                                        @php
+                                            $pendingTx = \App\Models\Transaction::find($invoice->transaction_id);
+                                        @endphp
+                                        @if ($pendingTx && $pendingTx->isPending())
+                                            <a
+                                                href="{{ route('student.transactions.show', $pendingTx) }}"
+                                                class="relative w-full flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold py-4 rounded-2xl transition-all duration-300 mb-3 shadow-[0_0_25px_rgba(245,158,11,0.25)] hover:shadow-[0_0_35px_rgba(245,158,11,0.45)]"
                                             >
-                                                @csrf
-
-                                                <button
-                                                    type="submit"
-                                                    class="relative w-full flex items-center justify-center bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white text-sm font-semibold py-4 rounded-2xl transition-all duration-300 mb-3 shadow-[0_0_30px_rgba(16,185,129,0.30)] hover:shadow-[0_0_45px_rgba(16,185,129,0.50)]"
+                                                {{-- Left Icon --}}
+                                                <svg
+                                                    class="w-5 h-5 absolute left-5"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    stroke-width="2"
                                                 >
-                                                    {{-- Left Icon --}}
-                                                    <svg
-                                                        class="w-5 h-5 absolute left-5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                        stroke-width="2"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                                                        />
-                                                    </svg>
+                                                    <circle cx="12" cy="12" r="10" />
+                                                    <path d="M12 8v4l3 3" />
+                                                </svg>
 
-                                                    {{-- Center Text --}}
-                                                    <span
-                                                        class="text-center tracking-wide"
-                                                    >
-                                                        Bayar Sekarang (Pay Now)
-                                                    </span>
+                                                {{-- Center Text --}}
+                                                <span
+                                                    class="text-center tracking-wide"
+                                                >
+                                                    Menunggu Pembayaran
+                                                </span>
 
-                                                    {{-- Right Arrow --}}
-                                                    <svg
-                                                        class="w-5 h-5 absolute right-5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                        stroke-width="2"
-                                                    >
-                                                        <path d="M5 12h14M12 5l7 7-7 7" />
-                                                    </svg>
-                                                </button>
-                                            </form>
+                                                {{-- Right Arrow --}}
+                                                <svg
+                                                    class="w-5 h-5 absolute right-5"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    stroke-width="2"
+                                                >
+                                                    <path d="M5 12h14M12 5l7 7-7 7" />
+                                                </svg>
+                                            </a>
 
                                         @endif
 
-                                        {{-- Footer --}}
-                                        <p class="text-[10px] text-slate-400 text-center flex items-center justify-center gap-1">
-                                            <svg
-                                                class="w-3 h-3"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                                stroke-width="2"
-                                            >
-                                                <rect x="3" y="11" width="18" height="11" rx="2" />
-                                                <path d="M7 11V7a5 5 0 0110 0v4" />
-                                            </svg>
-                                            Secure payment powered by Midtrans
-                                        </p>
-                                    </div>
-
-                                    {{-- Admin notes --}}
-                                    @if ($invoice->notes)
-                                        <div
-                                            class="mt-3 flex items-start gap-2 rounded-lg bg-slate-800 px-3 py-2"
+                                    @else
+                                        <form
+                                            method="POST"
+                                            action="{{ route('student.invoices.checkout', $invoice) }}"
                                         >
-                                            <svg class="w-3.5 h-3.5 text-slate-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <circle cx="12" cy="12" r="10" />
-                                                <path d="M12 8v4m0 4h.01" />
-                                            </svg>
-                                            <p class="text-[11px] text-slate-400">{{ $invoice->notes }}</p>
-                                        </div>
+                                            @csrf
+
+                                            <button
+                                                type="submit"
+                                                class="relative w-full flex items-center justify-center bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white text-sm font-semibold py-4 rounded-2xl transition-all duration-300 mb-3 shadow-[0_0_30px_rgba(16,185,129,0.30)] hover:shadow-[0_0_45px_rgba(16,185,129,0.50)]"
+                                            >
+                                                {{-- Left Icon --}}
+                                                <svg
+                                                    class="w-5 h-5 absolute left-5"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    stroke-width="2"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                                    />
+                                                </svg>
+
+                                                {{-- Center Text --}}
+                                                <span
+                                                    class="text-center tracking-wide"
+                                                >
+                                                    Bayar Sekarang (Pay Now)
+                                                </span>
+
+                                                {{-- Right Arrow --}}
+                                                <svg
+                                                    class="w-5 h-5 absolute right-5"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    stroke-width="2"
+                                                >
+                                                    <path d="M5 12h14M12 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
+                                        </form>
+
                                     @endif
+
+                                    {{-- Footer --}}
+                                    <p class="text-[10px] text-slate-400 text-center flex items-center justify-center gap-1">
+                                        <svg
+                                            class="w-3 h-3"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                        >
+                                            <rect x="3" y="11" width="18" height="11" rx="2" />
+                                            <path d="M7 11V7a5 5 0 0110 0v4" />
+                                        </svg>
+                                        Secure payment powered by Midtrans
+                                    </p>
                                 </div>
+
+                                {{-- Admin notes --}}
+                                @if ($invoice->notes)
+                                    <div
+                                        class="mt-3 flex items-start gap-2 rounded-lg bg-slate-800 px-3 py-2"
+                                    >
+                                        <svg class="w-3.5 h-3.5 text-slate-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M12 8v4m0 4h.01" />
+                                        </svg>
+                                        <p class="text-[11px] text-slate-400">{{ $invoice->notes }}</p>
+                                    </div>
+                                @endif
+                            </div>
 
                         @empty
                             <div

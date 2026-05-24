@@ -1,85 +1,98 @@
 @extends('layouts.student')
 
 @section('title', 'Detail Transaksi')
+@section('page-title', $transaction->code)
+@section('page-subtitle', 'Detail pembayaran SPP')
 
 @section('content')
 
     {{-- Back --}}
     <a href="{{ route('student.transactions') }}"
-       class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-6 transition-colors">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+       class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 mb-5 transition-colors">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
         </svg>
-        Kembali ke Riwayat
+        Back to Payment History
     </a>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-        {{-- ── Detail Transaksi ──────────────────────────────────── --}}
+        {{-- ── LEFT — Detail ──────────────────────────────────────── --}}
         <div class="lg:col-span-2 space-y-4">
 
-            {{-- Info Card --}}
-            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            {{-- Transaction Info Card --}}
+            <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
                 <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
-                    <h2 class="font-semibold text-white">Detail Transaksi</h2>
-                    {{-- Status Badge --}}
+                    <div>
+                        <h2 class="text-sm font-semibold text-white">Transaction Details</h2>
+                        <p class="text-[11px] text-slate-500 mt-0.5 font-mono">{{ $transaction->code }}</p>
+                    </div>
                     @php $status = $transaction->payment_status; @endphp
-                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold
+                    <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold
                         {{ match($status->color()) {
                             'success' => 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20',
                             'warning' => 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20',
                             'danger'  => 'bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/20',
-                            default   => 'bg-slate-500/10 text-slate-400 ring-1 ring-slate-500/20',
+                            default   => 'bg-slate-800 text-slate-400 ring-1 ring-slate-700',
                         } }}">
+                        <span class="w-1.5 h-1.5 rounded-full {{ match($status->color()) { 'success' => 'bg-emerald-400', 'warning' => 'bg-amber-400', 'danger' => 'bg-rose-400', default => 'bg-slate-500' } }}"></span>
                         {{ $status->label() }}
                     </span>
                 </div>
 
-                <div class="px-5 py-4 space-y-3 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Kode Transaksi</span>
-                        <span class="font-mono text-white text-xs">{{ $transaction->code }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Jurusan</span>
-                        <span class="text-white">{{ $transaction->department?->name ?? '-' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Semester</span>
-                        <span class="text-white">Semester {{ $transaction->department?->semester ?? '-' }}</span>
-                    </div>
-                    <div class="flex justify-between border-t border-slate-800 pt-3">
-                        <span class="text-slate-400">Total Tagihan</span>
-                        <span class="font-bold text-emerald-500 text-base">
+                <div class="divide-y divide-slate-800/60">
+                    @php
+                        $rows = [
+                            ['label' => 'Department',   'value' => $transaction->department?->name ?? '-', 'mono' => false],
+                            ['label' => 'Semester',     'value' => 'Semester ' . ($transaction->department?->semester ?? '-'), 'mono' => false],
+                        ];
+                    @endphp
+                    @foreach($rows as $row)
+                        <div class="px-5 py-3 flex items-center justify-between">
+                            <span class="text-xs text-slate-500">{{ $row['label'] }}</span>
+                            <span class="text-xs {{ $row['mono'] ? 'font-mono' : 'font-medium' }} text-slate-200">{{ $row['value'] }}</span>
+                        </div>
+                    @endforeach
+
+                    <div class="px-5 py-4 flex items-center justify-between bg-slate-900/30">
+                        <span class="text-xs text-slate-500">Total Amount</span>
+                        <span class="text-lg font-bold text-emerald-500">
                             Rp {{ number_format((float) $transaction->amount, 0, ',', '.') }}
                         </span>
                     </div>
+
                     @if($transaction->payment_method)
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">Metode Bayar</span>
-                            <span class="text-white capitalize">{{ str_replace('_', ' ', $transaction->payment_method) }}</span>
+                        <div class="px-5 py-3 flex items-center justify-between">
+                            <span class="text-xs text-slate-500">Payment Method</span>
+                            <span class="text-xs font-medium text-slate-200 capitalize">
+                                {{ str_replace('_', ' ', $transaction->payment_method) }}
+                            </span>
                         </div>
                     @endif
+
                     @if($transaction->paid_at)
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">Tanggal Lunas</span>
-                            <span class="text-white">{{ $transaction->paid_at->format('d M Y H:i') }}</span>
+                        <div class="px-5 py-3 flex items-center justify-between">
+                            <span class="text-xs text-slate-500">Paid At</span>
+                            <span class="text-xs font-medium text-emerald-400">
+                                {{ $transaction->paid_at->format('d M Y · H:i') }}
+                            </span>
                         </div>
                     @endif
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Dibuat</span>
-                        <span class="text-slate-300">{{ $transaction->created_at->format('d M Y H:i') }}</span>
+
+                    <div class="px-5 py-3 flex items-center justify-between">
+                        <span class="text-xs text-slate-500">Created</span>
+                        <span class="text-xs text-slate-400">{{ $transaction->created_at->format('d M Y · H:i') }}</span>
                     </div>
                 </div>
             </div>
 
-            {{-- Upload Bukti Bayar — hanya muncul kalau pending --}}
+            {{-- Upload Proof --}}
             @if($transaction->isPending())
-                <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
                     <div class="px-5 py-4 border-b border-slate-800">
-                        <h3 class="font-medium text-white text-sm">Upload Bukti Bayar Manual</h3>
-                        <p class="text-xs text-slate-400 mt-1">
-                            Jika bayar via bagian keuangan minta kwitansi, upload bukti tanda pembayaran  untuk diverifikasi admin.
+                        <h3 class="text-sm font-medium text-white">Upload Bukti Bayar</h3>
+                        <p class="text-xs text-slate-500 mt-1">
+                            Bayar via transfer manual? Upload bukti untuk diverifikasi admin.
                         </p>
                     </div>
                     <form method="POST"
@@ -89,29 +102,31 @@
                         @csrf
 
                         @if($transaction->proof_of_payment)
-                            <div class="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 rounded-lg px-3 py-2">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                            <div class="flex items-center gap-2.5 text-xs text-emerald-400 bg-emerald-500/8 border border-emerald-500/15 rounded-xl px-4 py-2.5">
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 Bukti sudah diupload — menunggu verifikasi admin
                             </div>
                         @endif
 
-                        <div>
+                        <div class="border-2 border-dashed border-slate-700 hover:border-slate-600 rounded-xl p-4 transition-colors">
                             <input type="file" name="proof" accept=".jpg,.jpeg,.png,.pdf"
-                                   class="w-full text-sm text-slate-400 file:mr-3 file:py-2 file:px-4
-                                          file:rounded-lg file:border-0 file:text-xs file:font-medium
-                                          file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700
-                                          file:cursor-pointer cursor-pointer">
-                            <p class="text-xs text-slate-500 mt-1">Format: JPG, PNG, PDF. Maks 5MB</p>
+                                   class="w-full text-xs text-slate-400
+                                          file:mr-3 file:py-1.5 file:px-4
+                                          file:rounded-lg file:border-0
+                                          file:text-xs file:font-medium
+                                          file:bg-slate-800 file:text-slate-300
+                                          hover:file:bg-slate-700 file:cursor-pointer cursor-pointer">
+                            <p class="text-[10px] text-slate-600 mt-2">JPG, PNG, PDF · Max 5MB</p>
                             @error('proof')
                                 <p class="text-xs text-rose-400 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <button type="submit"
-                                class="w-full bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium
-                                       py-2.5 rounded-xl transition-colors">
+                                class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium
+                                       py-2.5 rounded-xl transition-colors border border-slate-700/60">
                             Upload Bukti Bayar
                         </button>
                     </form>
@@ -120,93 +135,129 @@
 
             {{-- Payment Logs --}}
             @if($transaction->paymentLogs->count() > 0)
-                <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-                    <div class="px-5 py-4 border-b border-slate-800">
-                        <h3 class="font-medium text-white text-sm">Riwayat Pembayaran</h3>
+                <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
+                    <div class="px-5 py-3.5 border-b border-slate-800">
+                        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Payment Log</h3>
                     </div>
-                    <div class="divide-y divide-slate-800">
+                    <div class="divide-y divide-slate-800/60">
                         @foreach($transaction->paymentLogs->sortByDesc('created_at') as $log)
-                            <div class="px-5 py-3 flex items-center justify-between text-xs">
-                                <div>
-                                    <span class="text-slate-300 capitalize font-medium">{{ $log->status }}</span>
-                                    <p class="text-slate-500 mt-0.5 font-mono">{{ $log->midtrans_order_id }}</p>
+                            <div class="px-5 py-3 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-1.5 h-1.5 rounded-full {{ $log->status === 'settlement' ? 'bg-emerald-500' : 'bg-slate-600' }}"></div>
+                                    <div>
+                                        <span class="text-xs text-slate-300 font-medium capitalize">{{ $log->status }}</span>
+                                        <p class="text-[10px] text-slate-600 font-mono mt-0.5">{{ Str::limit($log->midtrans_order_id, 30) }}</p>
+                                    </div>
                                 </div>
-                                <span class="text-slate-500">{{ $log->created_at->format('d M Y H:i') }}</span>
+                                <span class="text-[10px] text-slate-500">{{ $log->created_at->format('d M Y · H:i') }}</span>
                             </div>
                         @endforeach
                     </div>
                 </div>
             @endif
-
         </div>
 
-        {{-- ── Action Panel ──────────────────────────────────────── --}}
+        {{-- ── RIGHT — Action Panel ────────────────────────────────── --}}
         <div class="space-y-4">
 
-            {{-- Bayar via Midtrans --}}
             @if($transaction->isPending())
-                <div class="bg-slate-900 border border-emerald-500/20 rounded-xl p-5"
+                <div class="bg-slate-950 border border-emerald-500/15 rounded-xl overflow-hidden"
                      x-data="paymentHandler({{ $transaction->id }})">
 
-                    <h3 class="font-semibold text-white mb-1">Bayar Sekarang</h3>
-                    <p class="text-sm text-slate-400 mb-4">
-                        Selesaikan pembayaran via transfer bank atau metode lainnya.
-                    </p>
-
-                    <p class="text-2xl font-bold text-emerald-500 mb-4">
-                        Rp {{ number_format((float) $transaction->amount, 0, ',', '.') }}
-                    </p>
-
-                    <button @click="pay()"
-                            :disabled="loading"
-                            class="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600
-                                   disabled:opacity-50 disabled:cursor-not-allowed
-                                   text-white font-semibold py-3 rounded-xl transition-colors text-sm">
-                        <template x-if="!loading">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                            </svg>
-                        </template>
-                        <template x-if="loading">
-                            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                            </svg>
-                        </template>
-                        <span x-text="loading ? 'Memproses...' : 'Bayar via Midtrans'"></span>
-                    </button>
-
-                    {{-- Status message --}}
-                    <div x-show="message" x-transition
-                         class="mt-3 rounded-lg px-3 py-2 text-xs text-center"
-                         :class="{
-                             'bg-emerald-500/10 text-emerald-400': messageType === 'success',
-                             'bg-rose-500/10 text-rose-400':       messageType === 'error',
-                             'bg-amber-500/10 text-amber-400':     messageType === 'pending',
-                         }"
-                         x-text="message">
+                    <div class="px-5 py-4 border-b border-slate-800/60">
+                        <h3 class="text-sm font-semibold text-white">Complete Payment</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Selesaikan via Midtrans Snap</p>
                     </div>
 
-                    <p class="text-xs text-slate-600 text-center mt-3">
-                        Didukung oleh <span class="text-slate-400">Midtrans</span> · Pembayaran aman & terenkripsi
-                    </p>
+                    <div class="px-5 py-4">
+                        <div class="bg-slate-900/60 rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
+                            <span class="text-xs text-slate-500">Amount Due</span>
+                            <span class="text-xl font-bold text-emerald-500">
+                                Rp {{ number_format((float) $transaction->amount, 0, ',', '.') }}
+                            </span>
+                        </div>
+
+                        <button @click="pay()"
+                                :disabled="loading"
+                                class="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600
+                                       active:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed
+                                       text-white text-sm font-semibold py-3 rounded-xl transition-colors">
+                            <template x-if="!loading">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                </svg>
+                            </template>
+                            <template x-if="loading">
+                                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                                </svg>
+                            </template>
+                            <span x-text="loading ? 'Memproses...' : 'Bayar via Midtrans'"></span>
+                        </button>
+
+                        <div x-show="message" x-transition
+                             class="mt-3 rounded-xl px-3 py-2 text-xs text-center font-medium"
+                             :class="{
+                                 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15': messageType === 'success',
+                                 'bg-rose-500/10 text-rose-400 border border-rose-500/15':           messageType === 'error',
+                                 'bg-amber-500/10 text-amber-400 border border-amber-500/15':        messageType === 'pending',
+                             }"
+                             x-text="message">
+                        </div>
+
+                        <div class="flex items-center justify-center gap-1.5 mt-3">
+                            <svg class="w-3 h-3 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                            </svg>
+                            <p class="text-[10px] text-slate-600">Secured by <span class="text-slate-500">Midtrans</span></p>
+                        </div>
+                    </div>
                 </div>
+
             @elseif($transaction->isPaid())
-                <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 text-center">
-                    <svg class="w-10 h-10 text-emerald-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <p class="font-semibold text-emerald-400">Pembayaran Lunas</p>
-                    <p class="text-xs text-slate-400 mt-1">
-                        {{ $transaction->paid_at?->format('d M Y H:i') }}
+                <div class="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-6 text-center">
+                    <div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-emerald-400">Payment Complete</p>
+                    <p class="text-xs text-slate-500 mt-1">
+                        {{ $transaction->paid_at?->format('d M Y · H:i') ?? '-' }}
                     </p>
                 </div>
+
             @else
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 text-center">
-                    <p class="text-slate-400 text-sm">{{ $transaction->payment_status->label() }}</p>
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 text-center">
+                    <p class="text-sm text-slate-400 font-medium">{{ $transaction->payment_status->label() }}</p>
+                    <p class="text-xs text-slate-600 mt-1">This transaction cannot be paid</p>
                 </div>
             @endif
+
+            {{-- Quick links --}}
+            <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
+                <a href="{{ route('student.transactions') }}"
+                   class="flex items-center gap-3 px-4 py-3 hover:bg-slate-800/30 transition-colors group">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                    </svg>
+                    <span class="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">All Transactions</span>
+                    <svg class="w-3.5 h-3.5 text-slate-600 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </a>
+                <a href="{{ route('student.dashboard') }}"
+                   class="flex items-center gap-3 px-4 py-3 border-t border-slate-800/60 hover:bg-slate-800/30 transition-colors group">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span class="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Dashboard</span>
+                    <svg class="w-3.5 h-3.5 text-slate-600 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </a>
+            </div>
 
         </div>
     </div>
@@ -214,71 +265,54 @@
 @endsection
 
 @push('scripts')
-{{-- Load Snap.js hanya kalau transaksi pending --}}
 @if($transaction->isPending())
 @php
     $snapUrl = config('services.midtrans.is_production')
         ? 'https://app.midtrans.com/snap/snap.js'
         : 'https://app.sandbox.midtrans.com/snap/snap.js';
 @endphp
-<script src="{{ $snapUrl }}"
-        data-client-key="{{ config('services.midtrans.client_key') }}"></script>
-
+<script src="{{ $snapUrl }}" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
 <script>
 function paymentHandler(transactionId) {
     return {
-        loading:     false,
-        message:     '',
-        messageType: 'success',
-
+        loading: false, message: '', messageType: 'success',
         async pay() {
             this.loading = true;
             this.message = '';
-
             try {
-                // 1. Request snap token dari server
                 const res = await fetch(`/transactions/${transactionId}/snap-token`, {
-                    method:  'POST',
+                    method: 'POST',
                     headers: {
-                        'Content-Type':     'application/json',
-                        'X-CSRF-TOKEN':     document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept':           'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
                     },
                 });
-
                 const data = await res.json();
-
-                if (! res.ok) {
-                    throw new Error(data.message || 'Gagal generate token');
-                }
-
+                if (!res.ok) throw new Error(data.message || 'Gagal generate token');
                 this.loading = false;
-
-                // 2. Buka Snap popup
                 window.snap.pay(data.snap_token, {
-                    onSuccess: (result) => {
-                        this.message     = '✅ Pembayaran berhasil! Halaman akan diperbarui...';
+                    onSuccess: () => {
+                        this.message = '✅ Pembayaran berhasil! Memperbarui halaman...';
                         this.messageType = 'success';
-                        // Reload setelah 2 detik agar status terbaru tampil
                         setTimeout(() => location.reload(), 2000);
                     },
-                    onPending: (result) => {
-                        this.message     = '⏳ Pembayaran pending. Selesaikan sesuai instruksi.';
+                    onPending: () => {
+                        this.message = '⏳ Menunggu pembayaran. Selesaikan sesuai instruksi.';
                         this.messageType = 'pending';
                     },
-                    onError: (result) => {
-                        this.message     = '❌ Pembayaran gagal. Coba lagi.';
+                    onError: () => {
+                        this.message = '❌ Pembayaran gagal. Silakan coba lagi.';
                         this.messageType = 'error';
                     },
                     onClose: () => {
-                        this.message     = '⚠️ Popup ditutup. Klik bayar lagi untuk melanjutkan.';
+                        this.message = '⚠️ Popup ditutup. Klik bayar untuk melanjutkan.';
                         this.messageType = 'pending';
                     },
                 });
-
             } catch (err) {
-                this.loading     = false;
-                this.message     = '❌ ' + err.message;
+                this.loading = false;
+                this.message = '❌ ' + err.message;
                 this.messageType = 'error';
             }
         }

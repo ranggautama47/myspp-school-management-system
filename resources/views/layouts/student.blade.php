@@ -1,189 +1,273 @@
 <!DOCTYPE html>
 <html lang="id" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Portal Siswa') — MySPP</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <title>
+        @yield ("title", "Portal Siswa")
+        — MySPP
+    </title>
 
-    {{-- Tailwind CSS via CDN untuk portal siswa --}}
+    <!-- Favicon / Browser Tab Icon -->
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="512x512"
+        href="{{ asset('images/android-chrome-512x512.png') }}"
+    />
+    <link
+        rel="shortcut icon"
+        href="{{ asset('images/favicon.png') }}"
+        type="image/png"
+    />
+    <link
+        rel="apple-touch-icon"
+        href="{{ asset('images/android-chrome-512x512.png') }}"
+    />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
+            darkMode: "class",
             theme: {
                 extend: {
-                    colors: {
-                        primary: {
-                            50:  '#ecfdf5',
-                            100: '#d1fae5',
-                            400: '#34d399',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                        },
-                        slate: {
-                            750: '#1a2744',
-                            850: '#0f1a2e',
-                            950: '#0f172a',
-                        }
-                    }
-                }
-            }
-        }
+                    colors: { emerald: { 500: "#10b981", 600: "#059669" } },
+                },
+            },
+        };
     </script>
-
-    {{-- Alpine.js untuk interaktivitas ringan --}}
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    @stack('head')
+    <script
+        defer
+        src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    @stack ("head")
 </head>
-<body class="bg-slate-950 text-white min-h-screen antialiased">
-
-    {{-- ── NAVBAR ─────────────────────────────────────────────── --}}
-    <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-
-                {{-- Brand --}}
-                <a href="{{ route('student.dashboard') }}" class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 14l9-5-9-5-9 5 9 5z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
-                        </svg>
+<body class="bg-slate-900 text-white min-h-screen antialiased">
+    <div class="flex min-h-screen">
+        {{-- ── SIDEBAR ─────────────────────────────────────────────── --}}
+        <aside
+            class="w-56 bg-slate-950 border-r border-slate-800 flex flex-col flex-shrink-0 sticky top-0 h-screen"
+        >
+            {{-- Brand --}}
+            <div class="px-4 py-5 border-b border-slate-800">
+                <a
+                    href="{{ route('student.dashboard') }}"
+                    class="flex items-center gap-2.5"
+                >
+                    <div
+                        class="w-8 h-8 flex items-center justify-center flex-shrink-0"
+                    >
+                        <img
+                            src="{{ asset('images/favicon.png') }}"
+                            alt="MySPP Logo"
+                            class="w-8 h-8 object-contain"
+                        />
                     </div>
-                    <span class="font-bold text-white">
-                        <span class="text-primary-500">My</span>SPP
-                    </span>
+                    <div>
+                        <p class="text-sm font-semibold text-white leading-none"><span class="text-emerald-500">My</span>SPP</p>
+                        <p class="text-[10px] text-slate-500 mt-0.5">Student Portal</p>
+                    </div>
                 </a>
+            </div>
 
-                {{-- Desktop Nav --}}
-                <div class="hidden md:flex items-center gap-1">
-                    <a href="{{ route('student.dashboard') }}"
-                       class="px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('student.dashboard')
-                                 ? 'bg-primary-500/10 text-primary-400'
-                                 : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
-                        Dashboard
+            {{-- Nav --}}
+            <nav class="flex-1 px-2 py-4 space-y-0.5">
+                @php
+                    $nav = [
+                        [
+                            "route" => "student.dashboard",
+                            "label" => "Dashboard",
+                            "match" => "student.dashboard",
+                            "icon" =>
+                                "M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z",
+                        ],
+                        [
+                            "route" => "student.transactions",
+                            "label" => "Payment History",
+                            "match" => "student.transactions*",
+                            "icon" =>
+                                "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+                        ],
+                        [
+                            "route" => "student.profile",
+                            "label" => "My Profile",
+                            "match" => "student.profile*",
+                            "icon" =>
+                                "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z",
+                        ],
+                    ];
+                @endphp
+
+                @foreach ($nav as $item)
+                    @php $active = request()->routeIs($item["match"]); @endphp
+                    <a
+                        href="{{ route($item['route']) }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors
+                          {{ $active ? 'bg-emerald-500/10 text-emerald-400 font-medium' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/70' }}"
+                    >
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="{{ $item['icon'] }}"
+                            />
+                        </svg>
+                        {{ $item["label"] }}
+                        @if ($active)
+                            <span
+                                class="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500"
+                            ></span>
+                        @endif
                     </a>
-                    <a href="{{ route('student.transactions') }}"
-                       class="px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('student.transactions*')
-                                 ? 'bg-primary-500/10 text-primary-400'
-                                 : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
-                        Pembayaran
-                    </a>
-                    <a href="{{ route('student.profile') }}"
-                       class="px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                              {{ request()->routeIs('student.profile*')
-                                 ? 'bg-primary-500/10 text-primary-400'
-                                 : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
-                        Profil
-                    </a>
+                @endforeach
+            </nav>
+
+            {{-- Help --}}
+            <div
+                class="m-3 p-3 bg-slate-800/60 rounded-xl border border-slate-700/50"
+            >
+                <p class="text-[11px] text-slate-400 leading-relaxed">Need help? Contact our support team.</p>
+                <a
+                    href="mailto:admin@myspp.com"
+                    class="mt-2 block text-center text-[11px] font-medium text-emerald-400 border border-emerald-500/25 rounded-lg py-1.5 hover:bg-emerald-500/10 transition-colors"
+                >
+                    Contact Support
+                </a>
+            </div>
+        </aside>
+
+        {{-- ── MAIN ─────────────────────────────────────────────────── --}}
+        <div class="flex-1 flex flex-col min-w-0">
+            {{-- Topbar --}}
+            <header
+                class="bg-slate-950 border-b border-slate-800 px-6 py-3 flex items-center justify-between sticky top-0 z-30"
+            >
+                <div>
+                    <h1 class="text-sm font-medium text-white">
+                        @yield ("page-title", auth()->user()->name)
+                    </h1>
+                    <p class="text-[11px] text-slate-500 mt-0.5">@yield ("page-subtitle", "Portal Siswa MySPP")</p>
                 </div>
 
-                {{-- User menu --}}
                 <div class="flex items-center gap-3" x-data="{ open: false }">
-                    <div class="hidden md:flex flex-col items-end">
-                        <span class="text-sm font-medium text-white">{{ auth()->user()->name }}</span>
-                        <span class="text-xs text-slate-400">{{ auth()->user()->student?->nis ?? 'Siswa' }}</span>
-                    </div>
+                    <button
+                        class="relative w-8 h-8 bg-slate-800 border border-slate-700/60 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors"
+                    >
+                        <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </button>
 
-                    {{-- Avatar --}}
-                    <button @click="open = !open" class="relative">
-                        @if(auth()->user()->image)
-                            <img src="{{ Storage::url(auth()->user()->image) }}"
-                                 class="w-9 h-9 rounded-full object-cover ring-2 ring-slate-700">
-                        @else
-                            <div class="w-9 h-9 rounded-full bg-primary-500 flex items-center justify-center text-sm font-bold text-white">
-                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    <div class="relative">
+                        <button
+                            @click="open = !open"
+                            class="flex items-center gap-2.5 cursor-pointer group"
+                        >
+                            @if (auth()->user()->image)
+                                <img
+                                    src="{{ Storage::url(auth()->user()->image) }}"
+                                    class="w-8 h-8 rounded-full object-cover ring-2 ring-slate-700 group-hover:ring-emerald-500/40 transition-all"
+                                />
+                            @else
+                                <div
+                                    class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-semibold text-white ring-2 ring-slate-700 group-hover:ring-emerald-500/40 transition-all"
+                                >
+                                    {{
+                                        strtoupper(
+                                            substr(auth()->user()->name, 0, 2),
+                                        )
+                                    }}
+                                </div>
+                            @endif
+                            <div class="hidden sm:block text-right">
+                                <p class="text-xs font-medium text-slate-200 leading-none">{{
+                                    auth()->user()
+                                        ->name
+                                }}</p>
+                                <p class="text-[10px] text-slate-500 mt-0.5">{{
+                                    auth()->user()->student?->nis ??
+                                        "Student"
+                                }}</p>
                             </div>
-                        @endif
+                        </button>
 
-                        {{-- Dropdown --}}
-                        <div x-show="open" @click.outside="open = false"
-                             x-transition
-                             class="absolute right-0 mt-2 w-44 bg-slate-800 border border-slate-700 rounded-xl shadow-xl py-1 z-50">
-                            <a href="{{ route('student.profile') }}"
-                               class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white">
-                                Edit Profil
+                        <div
+                            x-show="open"
+                            @click.outside="open = false"
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            class="absolute right-0 mt-2 w-44 bg-slate-800 border border-slate-700/60 rounded-xl shadow-xl shadow-black/30 py-1 z-50"
+                        >
+                            <a
+                                href="{{ route('student.profile') }}"
+                                class="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700/60 hover:text-white transition-colors"
+                            >
+                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                Edit Profile
                             </a>
-                            <div class="border-t border-slate-700 my-1"></div>
+                            <div
+                                class="border-t border-slate-700/50 my-1"
+                            ></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit"
-                                        class="w-full text-left px-4 py-2 text-sm text-rose-400 hover:bg-slate-700">
-                                    Keluar
+                                <button
+                                    type="submit"
+                                    class="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-rose-400 hover:bg-slate-700/60 transition-colors"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    Sign Out
                                 </button>
                             </form>
                         </div>
-                    </button>
-
-                    {{-- Mobile menu button --}}
-                    <button class="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-                            x-data @click="$dispatch('toggle-mobile-menu')">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                    </button>
+                    </div>
                 </div>
+            </header>
+
+            {{-- Flash --}}
+            <div class="px-6 pt-4">
+                @if (session("success"))
+                    <div
+                        class="flex items-center gap-2.5 rounded-xl bg-emerald-500/8 border border-emerald-500/15 px-4 py-2.5 text-xs text-emerald-400 mb-0"
+                    >
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {{
+                            session(
+                                "success",
+                            )
+                        }}
+                    </div>
+                @endif
+                @if (session("error"))
+                    <div
+                        class="flex items-center gap-2.5 rounded-xl bg-rose-500/8 border border-rose-500/15 px-4 py-2.5 text-xs text-rose-400 mb-0"
+                    >
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        {{
+                            session(
+                                "error",
+                            )
+                        }}
+                    </div>
+                @endif
             </div>
+
+            {{-- Content --}}
+            <main class="flex-1 p-6">
+                @yield ("content")
+            </main>
         </div>
+    </div>
 
-        {{-- Mobile Nav --}}
-        <div class="md:hidden border-t border-slate-800"
-             x-data="{ open: false }" @toggle-mobile-menu.window="open = !open"
-             x-show="open" x-transition>
-            <div class="px-4 py-2 space-y-1">
-                <a href="{{ route('student.dashboard') }}"
-                   class="block px-3 py-2 rounded-lg text-sm {{ request()->routeIs('student.dashboard') ? 'bg-primary-500/10 text-primary-400' : 'text-slate-400' }}">
-                    Dashboard
-                </a>
-                <a href="{{ route('student.transactions') }}"
-                   class="block px-3 py-2 rounded-lg text-sm {{ request()->routeIs('student.transactions*') ? 'bg-primary-500/10 text-primary-400' : 'text-slate-400' }}">
-                    Pembayaran
-                </a>
-                <a href="{{ route('student.profile') }}"
-                   class="block px-3 py-2 rounded-lg text-sm {{ request()->routeIs('student.profile*') ? 'bg-primary-500/10 text-primary-400' : 'text-slate-400' }}">
-                    Profil
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    {{-- ── MAIN CONTENT ──────────────────────────────────────────── --}}
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {{-- Flash messages --}}
-        @if(session('success'))
-            <div class="mb-6 flex items-center gap-3 rounded-xl bg-primary-500/10 border border-primary-500/20 px-4 py-3 text-sm text-primary-400">
-                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="mb-6 flex items-center gap-3 rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-sm text-rose-400">
-                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
-                {{ session('error') }}
-            </div>
-        @endif
-
-        @yield('content')
-    </main>
-
-    {{-- ── FOOTER ──────────────────────────────────────────────── --}}
-    <footer class="mt-16 border-t border-slate-800 py-6 text-center text-xs text-slate-600">
-        MySPP School Management System &copy; {{ date('Y') }}
-    </footer>
-
-    @stack('scripts')
+    @stack ("scripts")
 </body>
 </html>
