@@ -2,7 +2,7 @@
 
 <h1>🏫 MySPP — School Management System</h1>
 
-<p>A web-based school administration platform with integrated SPP payment management built for Indonesian schools</p>
+<p>Platform administrasi sekolah berbasis web dengan manajemen pembayaran SPP terintegrasi, dirancang untuk sekolah-sekolah di Indonesia</p>
 
 ![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=for-the-badge&logo=php&logoColor=white)
@@ -16,8 +16,8 @@
 
 <br/>
 
-> **Portfolio Project** — A full-stack Laravel admin panel for school SPP (tuition) management,  
-> featuring role-based access control, financial reporting, and Midtrans payment gateway integration.
+> **Portfolio Project** — Full-stack Laravel admin panel untuk manajemen SPP sekolah,  
+> dilengkapi role-based access control, portal siswa, laporan keuangan, dan integrasi payment gateway Midtrans.
 
 </div>
 
@@ -41,55 +41,66 @@
 
 ## 🎯 About
 
-**MySPP** is a school management system focused on student SPP (tuition fee) administration. It provides a complete admin panel for managing students, classrooms, payments, and financial reports — all in one place.
+**MySPP** adalah sistem manajemen sekolah yang berfokus pada administrasi pembayaran SPP (Sumbangan Pembinaan Pendidikan). Menyediakan panel admin lengkap untuk mengelola siswa, kelas, tagihan, pembayaran, dan laporan keuangan — semuanya dalam satu platform.
 
-Built as a **portfolio project** to demonstrate real-world Laravel development: clean architecture, role-based permissions, financial module, and payment gateway integration.
+Dibangun sebagai **portfolio project** untuk mendemonstrasikan pengembangan Laravel dunia nyata: clean architecture, role-based permissions, modul keuangan, integrasi payment gateway, email notifikasi otomatis, dan portal siswa berbasis Blade + Livewire.
 
-**Designed for:**
+**Cocok untuk:**
 
-- Private schools (SMP, SMA, SMK)
-- Islamic boarding schools (pesantren)
-- Educational foundations and training centers
+- Sekolah swasta (SMP, SMA, SMK)
+- Pondok pesantren
+- Yayasan pendidikan dan lembaga pelatihan
 
 ---
 
 ## ✨ Features
 
-### 👨‍💼 Admin Panel
+### 👨‍💼 Admin Panel (Filament v3)
 
-| Feature                           | Status  |
-| --------------------------------- | ------- |
-| Department & Classroom Management | ✅ Done |
-| Academic Year Management          | ✅ Done |
-| Student Data Management           | ✅ Done |
-| User & Role Management (Spatie)   | ✅ Done |
-| Payment (Transaction) Management  | ✅ Done |
-| Invoice Management                | ✅ Done |
-| Expense Tracking                  | ✅ Done |
-| Finance Report with Charts        | ✅ Done |
-| Export Report to Excel (.xlsx)    | ✅ Done |
-| Application Settings              | ✅ Done |
-| Dashboard Widgets & Analytics     | ✅ Done |
-| Dark Enterprise Theme             | ✅ Done |
+| Feature                          | Status  |
+| -------------------------------- | ------- |
+| Manajemen Jurusan & Kelas        | ✅ Done |
+| Manajemen Tahun Ajaran           | ✅ Done |
+| Manajemen Data Siswa             | ✅ Done |
+| Manajemen User & Role (Spatie)   | ✅ Done |
+| Manajemen Pembayaran (Transaksi) | ✅ Done |
+| Manajemen Invoice / Tagihan      | ✅ Done |
+| Pencatatan Pengeluaran Sekolah   | ✅ Done |
+| Laporan Keuangan + Grafik        | ✅ Done |
+| Export Laporan ke Excel (.xlsx)  | ✅ Done |
+| Pengaturan Aplikasi              | ✅ Done |
+| Dashboard Widgets & Analytics    | ✅ Done |
+| Dark Enterprise Theme            | ✅ Done |
 
 ### 🎓 Student Portal
 
-| Feature                     | Status       |
-| --------------------------- | ------------ |
-| Student login via API       | ✅ Done      |
-| View tuition bill status    | 🔄 Phase 4   |
-| Pay SPP via Midtrans Snap   | 🔄 Phase 4   |
-| Upload manual payment proof | 🔄 Phase 4   |
-| Transaction history         | 🔄 Phase 4   |
+| Feature                               | Status  |
+| ------------------------------------- | ------- |
+| Login siswa (Blade + role validation) | ✅ Done |
+| Dashboard tagihan & ringkasan bayar   | ✅ Done |
+| Bayar SPP via Midtrans Snap           | ✅ Done |
+| Upload bukti pembayaran manual        | ✅ Done |
+| Riwayat transaksi                     | ✅ Done |
+| Edit profil & ganti password          | ✅ Done |
+| Upload scan ijazah                    | ✅ Done |
 
-### 💳 Payment Gateway
+### 💳 Payment Gateway (Midtrans)
 
-| Feature                    | Status             |
-| -------------------------- | ------------------ |
-| Midtrans service & config  | ✅ Done            |
-| Snap token generation      | ✅ Done            |
-| Webhook handler            | ✅ Done            |
-| Payment status auto-update | ✅ Done            |
+| Feature                                  | Status  |
+| ---------------------------------------- | ------- |
+| Konfigurasi & service Midtrans           | ✅ Done |
+| Generate Snap token                      | ✅ Done |
+| Webhook handler + signature verification | ✅ Done |
+| Auto-update status pembayaran            | ✅ Done |
+| PaymentLog audit trail                   | ✅ Done |
+
+### 📧 Email Notifikasi
+
+| Feature                                                     | Status  |
+| ----------------------------------------------------------- | ------- |
+| Email tagihan baru ke siswa (`InvoiceCreatedMail`)          | ✅ Done |
+| Email konfirmasi pembayaran berhasil (`PaymentSuccessMail`) | ✅ Done |
+| Background queue (database driver)                          | ✅ Done |
 
 ---
 
@@ -113,31 +124,31 @@ Built as a **portfolio project** to demonstrate real-world Laravel development: 
 
 ---
 
-# 🗄 Database Schema — MySPP
+## 🗄 Database Schema
 
-| Table | Description |
-|---|---|
-| users | Students and admins (differentiated by role) |
-| students | Student profile linked to user |
-| departments | Major/program + SPP cost per semester |
-| classrooms | Class linked to department & academic year |
-| academic_years | Academic year records |
-| transactions | SPP payment records + Midtrans status |
-| payment_logs | Midtrans webhook audit trail |
-| invoices | Billing issued to students |
-| expenses | School operational expenses |
-| settings | Application-wide configuration (key-value) |
+| Table            | Description                                    |
+| ---------------- | ---------------------------------------------- |
+| `users`          | Siswa dan admin (dibedakan by role)            |
+| `students`       | Profil siswa yang terhubung ke user            |
+| `departments`    | Jurusan/program + biaya SPP per semester       |
+| `classrooms`     | Kelas yang terhubung ke jurusan & tahun ajaran |
+| `academic_years` | Data tahun ajaran                              |
+| `transactions`   | Catatan pembayaran SPP + status Midtrans       |
+| `payment_logs`   | Audit trail webhook Midtrans                   |
+| `invoices`       | Tagihan yang diterbitkan ke siswa              |
+| `expenses`       | Pengeluaran operasional sekolah                |
+| `settings`       | Konfigurasi aplikasi (key-value)               |
+| `jobs`           | Antrian background job (email, dll)            |
 
----
+### 🔐 Spatie Permission Tables
 
-# 🔐 Spatie Permission Tables
+| Table                  | Description                                      |
+| ---------------------- | ------------------------------------------------ |
+| `roles`                | Super Admin, Admin, Operator, Bendahara, Student |
+| `permissions`          | Granular action permissions                      |
+| `model_has_roles`      | Pivot: users ↔ roles                             |
+| `role_has_permissions` | Pivot: roles ↔ permissions                       |
 
-| Table | Description |
-|---|---|
-| roles | Super Admin, Admin, Operator, Bendahara, Student |
-| permissions | Granular action permissions |
-| model_has_roles | Pivot: users ↔ roles |
-| role_has_permissions | Pivot: roles ↔ permissions |
 ---
 
 ## 🚀 Installation
@@ -154,56 +165,76 @@ Built as a **portfolio project** to demonstrate real-world Laravel development: 
 **1. Clone the repository**
 
 ```bash
-git clone [https://github.com/ranggautama47/myspp-school-management-system.git](https://github.com/ranggautama47/myspp-school-management-system.git)
+git clone https://github.com/ranggautama47/myspp-school-management-system.git
 cd myspp-school-management-system
 ```
+
 **2. Install PHP & JS dependencies**
-``` Bash composer install
+
+```bash
+composer install
 npm install && npm run build
 ```
-**3. Setup environment** 
-```Bash
+
+**3. Setup environment**
+
+```bash
 cp .env.example .env
 php artisan key:generate
 ```
-**4. Configure database in <span style="background-color: #2d2d2d; color: #ffffff; padding: 2px 6px; border-radius: 4px;">.env</span>**
 
-### Cuplikan kode :
+**4. Configure database in `.env`**
 
-<pre style="background-color: #2d2d2d; color: #f8f8f2; padding: 10px; border-radius: 5px;">
-<code style="color: #66d9ef;">DB_CONNECTION</code>=<span style="color: #a6e22e;">mysql</span>
-<code style="color: #66d9ef;">DB_HOST</code>=<span style="color: #a6e22e;">127.0.0.1</span>
-<code style="color: #66d9ef;">DB_PORT</code>=<span style="color: #e6db74;">3306</span>
-<code style="color: #66d9ef;">DB_DATABASE</code>=<span style="color: #a6e22e;">myspp</span>
-<code style="color: #66d9ef;">DB_USERNAME</code>=<span style="color: #a6e22e;">root</span>
-<code style="color: #66d9ef;">DB_PASSWORD</code>=<span style="color: #a6e22e;"></span>
-</code>
-</pre>
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=myspp
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-**5. Run migrations & seeders**
-```Bash
+**5. Run migrations, queue table & seeders**
+
+```bash
+php artisan queue:table
 php artisan migrate --seed
 ```
 
-**6. 🔗 Link storage & start server**
-```Bash
+> `queue:table` diperlukan agar background job email bisa berjalan via database driver.
+
+**6. Link storage & start server**
+
+```bash
 php artisan storage:link
 php artisan serve
 ```
-<strong style="color: #4caf50;">🌐 Access:</strong>
 
-👉 <code>http://localhost:8000/admin</code>
+**7. Jalankan queue worker** _(di terminal terpisah)_
+
+```bash
+php artisan queue:work
+```
+
+🌐 **Akses:** `http://localhost:8000/admin`
+
+---
 
 ## ⚙️ Configuration
+
 **Midtrans (Payment Gateway)**
-**Register at midtrans.com and fill in <span style="background-color: #2d2d2d; color: #ffffff; padding: 2px 6px; border-radius: 4px;">.env :</span>**
-```Cuplikan kode
+
+Daftar di [midtrans.com](https://midtrans.com) lalu isi di `.env`:
+
+```env
 MIDTRANS_SERVER_KEY=SB-Mid-server-xxxxxxxxxxxx
 MIDTRANS_CLIENT_KEY=SB-Mid-client-xxxxxxxxxxxx
 MIDTRANS_IS_PRODUCTION=false
 ```
-## Email (Resend)
-```Cuplikan kode
+
+**Email (Resend / Mailtrap)**
+
+```env
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.resend.com
 MAIL_PORT=465
@@ -212,104 +243,141 @@ MAIL_PASSWORD=re_xxxxxxxxxxxx
 MAIL_FROM_ADDRESS=noreply@yourdomain.com
 MAIL_FROM_NAME="MySPP"
 ```
-## File Storage (Cloudinary)
-```Cuplikan kode
+
+> Untuk development lokal, gunakan [Mailtrap](https://mailtrap.io): `MAIL_HOST=sandbox.smtp.mailtrap.io`
+
+**File Storage (Cloudinary)**
+
+```env
 CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
 ```
+
+**Queue**
+
+```env
+QUEUE_CONNECTION=database
+```
+
+---
+
 ## 👤 Default Accounts
-**After running <span style="background-color: #2d2d2d; color: #e21212; padding: 2px 6px; border-radius: 4px;">php artisan migrate --seed :</span>**
 
-| Role | Email | Password |
-|------|-------|----------|
-| 👑 Super Admin | admin@myspp.com | password |
-| 🧑‍🎓 Student | student@myspp.com | password |
+Setelah menjalankan `php artisan migrate --seed`:
 
-🔗 **Admin Panel:** [http://localhost:8000/admin](http://localhost:8000/admin)
+| Role           | Email             | Password |
+| -------------- | ----------------- | -------- |
+| 👑 Super Admin | admin@myspp.com   | password |
+| 🧑‍🎓 Student     | student@myspp.com | password |
+
+🔗 **Admin Panel:** `http://localhost:8000/admin`  
+🔗 **Student Portal:** `http://localhost:8000/login`
+
+---
 
 ## 🔌 API Endpoints
 
-**Base:** <span style="background-color: #2d2d2d; color: #ffffff; padding: 2px 6px; border-radius: 4px;">[php artisan migrate --seed :](http://localhost:8000/api)</span> 
+**Base URL:** `http://localhost:8000/api`
 
-📌**All endpoints** <span style="background-color: #2d2d2d; color: #55cdfc; padding: 2px 6px; border-radius: 4px;">(except auth)</span> require header:
-`Authorization: Bearer {token}`
+> Semua endpoint _(kecuali auth)_ memerlukan header: `Authorization: Bearer {token}`
 
----
 ### 🔐 Auth
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/login` | Login user |
-| POST | `/api/auth/register` | Register user |
-| POST | `/api/auth/logout` | Logout user |
-| GET | `/api/auth/me` | Get authenticated user |
----
+
+| Method | Endpoint             | Description            |
+| ------ | -------------------- | ---------------------- |
+| POST   | `/api/auth/login`    | Login user             |
+| POST   | `/api/auth/register` | Register user          |
+| POST   | `/api/auth/logout`   | Logout user            |
+| GET    | `/api/auth/me`       | Get authenticated user |
 
 ### 🏢 Departments
-| Method | Endpoint | Role |
-|--------|----------|------|
-| GET | `/api/departments` | All users |
-| GET | `/api/departments/{id}` | All users |
-| POST | `/api/departments` | **Admin** |
-| PUT | `/api/departments/{id}` | **Admin** |
+
+| Method | Endpoint                | Role      |
+| ------ | ----------------------- | --------- |
+| GET    | `/api/departments`      | All users |
+| GET    | `/api/departments/{id}` | All users |
+| POST   | `/api/departments`      | **Admin** |
+| PUT    | `/api/departments/{id}` | **Admin** |
 | DELETE | `/api/departments/{id}` | **Admin** |
----
 
 ### 💰 Transactions
 
-| Method | Endpoint | Role |
-|--------|----------|------|
-| GET | `/api/transactions` | Admin: all, Student: own |
-| GET | `/api/transactions/{id}` | All users |
-| POST | `/api/transactions` | **Admin** |
-| POST | `/api/transactions/{id}/pay` | **Student** |
-| POST | `/api/transactions/{id}/approve` | **Admin** |
+| Method | Endpoint                              | Role                                 |
+| ------ | ------------------------------------- | ------------------------------------ |
+| GET    | `/api/transactions`                   | Admin: semua, Student: milik sendiri |
+| GET    | `/api/transactions/{id}`              | All users                            |
+| POST   | `/api/transactions`                   | **Admin**                            |
+| POST   | `/api/transactions/{id}/pay`          | **Student**                          |
+| POST   | `/api/transactions/{id}/approve`      | **Admin**                            |
+| POST   | `/api/transactions/{id}/upload-proof` | **Student**                          |
 
----
 ### 💳 Midtrans
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/midtrans/snap-token` | Generate Snap token |
-| POST | `/api/midtrans/webhook` | Receive Midtrans notification 
+| Method | Endpoint                   | Description                           |
+| ------ | -------------------------- | ------------------------------------- |
+| POST   | `/api/midtrans/snap-token` | Generate Snap token                   |
+| POST   | `/api/midtrans/webhook`    | Terima notifikasi Midtrans _(public)_ |
 
----
+### 📋 Role & Akses
 
-## 📋 Ringkasan Role & Akses
-| Role | Akses |
-|------|-------|
-| 👑 **Super Admin** | Semua endpoint (create, read, update, delete) |
-| 🧑‍🎓 **Student** | Read only, dan melakukan pembayaran (`/pay`) |
+| Role                    | Akses                                            |
+| ----------------------- | ------------------------------------------------ |
+| 👑 **Super Admin**      | Semua endpoint (CRUD penuh + settings)           |
+| 🛠️ **Admin / Operator** | Manajemen akademik & keuangan                    |
+| 💰 **Bendahara**        | Modul keuangan & laporan                         |
+| 🧑‍🎓 **Student**          | Read only + pembayaran (`/pay`, `/upload-proof`) |
+
 ---
 
 ## 📍 Project Status
-```
-Phase 1 — Backend Foundation     ✅ Complete
-Phase 2 — Filament Admin Panel   ✅ Complete
-Phase 3 — Midtrans Integration   ✅ Complete
-Phase 4 — Student Portal         🔄 In Progress
-Phase 5 — Deployment             📋 Planned
-```
-# 📊 Project Progress Report
 
-| Phase | Status | Components |
-|-------|--------|------------|
-| **Phase 1** — Backend Foundation | ✅ | Database migrations, Eloquent models (relationships, scopes, observers), Enums (TransactionStatus, InvoiceStatus, ExpenseCategory, UserRole), Services (Transaction, Midtrans, Report), TransactionObserver + Policy, Form Requests, REST API + Sanctum |
-| **Phase 2** — Filament Admin Panel | ✅ | Dark enterprise theme (Slate 950 + Emerald), Custom branding, Dashboard widgets (StatsOverview, PaymentTrends, PaymentOverview, RecentTransactions), Academic Module (Departments, Classrooms, Academic Years, Students), Finance Module (Payments, Invoices, Expenses, Report + Excel), System Module (Users, Roles, Settings), Role-based navigation |
-| **Phase 3** — Midtrans Integration | ✅ | MidtransService (createSnapToken, handleWebhook, verifySignature), Webhook + PaymentLog audit, midtrans/midtrans-php package, Sandbox + ngrok testing, Full payment flow |
-| **Phase 4** — Student Portal | 🔄 | Student login (Blade + Livewire), Dashboard (bill + history), Pay SPP (Midtrans Snap), Upload proof, Transaction history |
-| **Phase 5** — Deployment | ⬜ | .env.example, ERD diagram in /docs, Deploy to Railway + PlanetScale, Production env vars, Live demo URL |
+```
+Phase 1 — Backend Foundation      ✅ Complete
+Phase 2 — Filament Admin Panel    ✅ Complete
+Phase 3 — Midtrans Integration    ✅ Complete
+Phase 4 — Student Portal          ✅ Complete
+Phase 5 — Deployment              📋 Planned
+```
+
+### 📊 Progress Detail
+
+| Phase                              | Status | Komponen Utama                                                                                                                                                                                          |
+| ---------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Phase 1** — Backend Foundation   | ✅     | Migrations, Eloquent models (relationships, scopes, observers), Enums, Services (Transaction, Midtrans, Report), Observer + Policy, Form Requests, REST API + Sanctum                                   |
+| **Phase 2** — Filament Admin Panel | ✅     | Dark enterprise theme (Slate 950 + Emerald), Custom branding, Dashboard widgets, Academic Module, Finance Module (Payments, Invoices, Expenses, Report + Excel), System Module (Users, Roles, Settings) |
+| **Phase 3** — Midtrans Integration | ✅     | MidtransService (createSnapToken, handleWebhook, verifySignature), Webhook + PaymentLog audit, Sandbox + ngrok testing, Full payment flow                                                               |
+| **Phase 4** — Student Portal       | ✅     | Student login, Dashboard (tagihan + riwayat), Bayar SPP via Snap, Upload bukti, Riwayat transaksi, Edit profil, Email notifikasi otomatis (InvoiceCreated + PaymentSuccess)                             |
+| **Phase 5** — Deployment           | 📋     | `.env.example`, ERD diagram di `/docs`, Deploy ke Railway + PlanetScale, Env vars production, Live demo URL, Tag v1.0.0                                                                                 |
 
 ---
 
 ## 📸 Screenshots
 
-> ⏳ *Screenshots will be added after Phase 4 completion.*
-
-| Module | Preview |
-|--------|---------|
-| Admin Dashboard | ![Dashboard](screenshot/Admin%20Dashboard.png) |
-| Finance Report | ![Finance Report](screenshot/Finance-Report.png) |
+| Module              | Preview                                                    |
+| ------------------- | ---------------------------------------------------------- |
+| Admin Dashboard     | ![Dashboard](screenshot/Admin%20Dashboard.png)             |
+| Finance Report      | ![Finance Report](screenshot/Finance-Report.png)           |
 | Payments Management | ![Payments Management](screenshot/Payments-Management.png) |
-| Student Management | ![Coming Soon](https://via.placeholder.com/400x200?text=Student+Management+Coming+Soon) |
+| Student Portal      | _Coming after Phase 5_                                     |
+
+---
+
+## 🐛 Known Issues & Notes
+
+- **GoPay di Midtrans sandbox** = QRIS (tidak ada simulator). Gunakan Bank Transfer VA + `simulator.sandbox.midtrans.com`
+- **Ngrok URL berubah** setiap restart. Update webhook URL di dashboard Midtrans setiap kali ngrok di-restart
+
+---
+
+## 🛠 Dev Commands
+
+```bash
+php artisan serve                    # Start server
+php artisan optimize:clear           # Clear all cache
+php artisan migrate:fresh --seed     # Reset DB
+php artisan queue:work               # Queue worker (email notifikasi)
+npm run build                        # Build assets
+ngrok http 8000                      # Expose untuk webhook Midtrans
+```
 
 ---
 
@@ -324,8 +392,4 @@ Phase 5 — Deployment             📋 Planned
 
 ## 📄 License
 
-<div align="left">
-  Distributed under the <strong>MIT License</strong>.<br />
-  
-See full license [here](LICENSE). for more information.
-</div>
+Distributed under the **MIT License**. See [LICENSE](LICENSE) for more information.
