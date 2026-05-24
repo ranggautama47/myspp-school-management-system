@@ -3,7 +3,10 @@
 namespace App\Observers;
 
 use App\Models\Transaction;
+use App\Mail\PaymentSuccessMail;
+use App\Enums\TransactionStatus;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * TransactionObserver
@@ -36,8 +39,18 @@ class TransactionObserver
             Log::info('[Transaction] Status berubah', [
                 'code'   => $transaction->code,
                 'dari'   => $transaction->getOriginal('payment_status'),
-                'menjadi'=> $transaction->payment_status->value,
+                'menjadi' => $transaction->payment_status->value,
             ]);
+            // EKSEKUSI EMAIL JIKA STATUS MENJADI PAID (LUNAS)
+            if ($transaction->payment_status === TransactionStatus::Paid) {
+                // Pastikan siswa dan emailnya ada
+                if ($transaction->student && $transaction->student->user && $transaction->student->user->email) {
+                    Mail::to($transaction->student->user->email)->queue(new PaymentSuccessMail($transaction));
+                    Log::info('[Email] PaymentSuccessMail masuk antrean untuk: ' . $transaction->student->user->email);
+                } else {
+                    Log::warning('[Email] Gagal mengirim PaymentSuccessMail: Data email siswa tidak ditemukan.', ['transaction_code' => $transaction->code]);
+                }
+            }
         }
     }
 

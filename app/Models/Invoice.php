@@ -9,6 +9,25 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
+/**
+ * @property int $id
+ * @property string $number
+ * @property int $student_id
+ * @property int $department_id
+ * @property float $amount
+ * @property \Carbon\Carbon $due_date
+ * @property \App\Enums\InvoiceStatus $status
+ * @property int|null $transaction_id
+ * @property string|null $notes
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property \Carbon\Carbon|null $deleted_at
+ *
+ * @property-read \App\Models\Student $student
+ * @property-read \App\Models\Department $department
+ * @property-read \App\Models\Transaction|null $transaction
+ * @property-read string $formatted_amount
+ */
 class Invoice extends Model
 {
     use HasFactory, SoftDeletes;

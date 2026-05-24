@@ -14,7 +14,7 @@ class ProfileController extends Controller
     public function edit(Request $request): View
     {
         $user    = $request->user();
-        $student = $user->student()->with(['classroom', 'department'])->first();
+        $student = $user->student()->with(['classroom', 'department', 'academicYear'])->first();
 
         return view('student.profile.edit', compact('user', 'student'));
     }

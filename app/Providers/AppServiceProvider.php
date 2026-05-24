@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Transaction;
+use App\Models\Invoice;
 use App\Observers\TransactionObserver;
+use App\Observers\InvoiceObserver;
 use App\Policies\TransactionPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -20,12 +22,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
 
-    
+
         // =========================================
         // Daftarkan Observer
         // Sesuai architecture.md: Observer Pattern
         // =========================================
 
+        Invoice::observe(InvoiceObserver::class);
         Transaction::observe(TransactionObserver::class);
 
         // =========================================
