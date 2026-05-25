@@ -223,6 +223,42 @@ class TransactionResource extends Resource
                             ->send();
                     }),
 
+                // ── DOWNLOAD INVOICE PDF ──────────────────────────────
+                Tables\Actions\Action::make('downloadInvoice')
+                    ->label('Invoice PDF')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->tooltip('Download invoice sebagai PDF')
+                    ->action(function (Transaction $record) {
+                        $record->load([
+                            'user.student.classroom',
+                            'user.student.department',
+                            'department',
+                            'invoice',
+                        ]);
+
+                        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.transactions.invoice', [
+                            'transaction'  => $record,
+                            'schoolName'   => \App\Models\Setting::get('school_name', 'Nama Sekolah'),
+                            'schoolEmail'  => \App\Models\Setting::get('school_email', ''),
+                            'schoolPhone'  => \App\Models\Setting::get('school_phone', ''),
+                            'schoolAddress' => \App\Models\Setting::get('school_address', ''),
+                            'academicYear' => \App\Models\Setting::get('academic_year', ''),
+                        ])
+                            ->setPaper('a4', 'portrait')
+                            ->setOptions([
+                                'defaultFont'          => 'DejaVu Sans',
+                                'isHtml5ParserEnabled' => true,
+                                'isRemoteEnabled'      => false,
+                            ]);
+
+                        return response()->streamDownload(
+                            fn() => print($pdf->output()),
+                            'Invoice-' . $record->code . '.pdf',
+                            ['Content-Type' => 'application/pdf']
+                        );
+                    }),
+
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),

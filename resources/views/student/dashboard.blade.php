@@ -165,11 +165,17 @@
                             <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
-                            {{-- Dot Kuning jika ada notifikasi aktif --}}
-                            @if ($totalPending > 0)
+                            @php $dashNotifCount = $pendingInvoices->count() + $totalPending; @endphp
+                            @if ($dashNotifCount > 0)
                                 <span
-                                    class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-amber-400 rounded-full border border-slate-950"
-                                ></span>
+                                    class="absolute -top-1 -right-1 min-w-[16px] h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 border-2 border-slate-950"
+                                >
+                                    {{
+                                        $dashNotifCount > 9
+                                            ? "9+"
+                                            : $dashNotifCount
+                                    }}
+                                </span>
                             @endif
                         </button>
 
@@ -183,17 +189,30 @@
                             x-transition:leave="transition ease-in duration-150"
                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                             x-transition:leave-end="opacity-0 scale-95 translate-y-[-10px]"
-                            class="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden"
+                            class="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl shadow-black/40 z-50 overflow-hidden"
                             style="display: none"
                         >
                             {{-- Header Popover --}}
                             <div
-                                class="px-4 py-3 border-b border-slate-700 flex items-center justify-between bg-slate-850"
+                                class="px-4 py-3 border-b border-slate-700 flex items-center justify-between"
                             >
-                                <span
-                                    class="text-xs font-semibold text-slate-200"
-                                    >Notifications</span
-                                >
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="text-xs font-semibold text-slate-200"
+                                        >Notifikasi</span
+                                    >
+                                    @if ($dashNotifCount > 0)
+                                        <span
+                                            class="bg-rose-500/20 text-rose-400 text-[10px] font-semibold rounded-full px-1.5 py-0.5"
+                                        >
+                                            {{
+                                                $dashNotifCount > 9
+                                                    ? "9+"
+                                                    : $dashNotifCount
+                                            }}
+                                        </span>
+                                    @endif
+                                </div>
                                 <button
                                     @click="openNotifications = false"
                                     class="text-slate-400 hover:text-white transition-colors"
@@ -204,52 +223,98 @@
                                 </button>
                             </div>
 
-                            {{-- List Item Notifikasi (Sesuai Konsep Otomatisasi Sistem/Email) --}}
+                            {{-- List Notifikasi Dinamis --}}
                             <div
-                                class="max-h-64 overflow-y-auto divide-y divide-slate-700/60"
+                                class="max-h-72 overflow-y-auto divide-y divide-slate-700/60"
                             >
-                                @if ($totalPending > 0)
-                                    {{-- Item 1: Tagihan Baru --}}
+                                @php $hasNotif = false; @endphp
+
+                                {{-- Tagihan belum dibayar --}}
+                                @foreach ($pendingInvoices as $inv)
+                                    @php $hasNotif = true; @endphp
                                     <div
-                                        class="p-3.5 hover:bg-slate-750 transition-colors flex gap-3 items-start group"
+                                        class="p-3.5 hover:bg-slate-700/40 transition-colors flex gap-3 items-start group"
                                     >
                                         <div
-                                            class="w-2 h-2 bg-amber-400 rounded-full mt-1.5 flex-shrink-0"
+                                            class="w-2 h-2 {{ $inv->status->value === 'overdue' ? 'bg-rose-400' : 'bg-amber-400' }} rounded-full mt-1.5 flex-shrink-0"
                                         ></div>
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-xs font-medium text-slate-200 group-hover:text-emerald-400 transition-colors">New Invoice Created</p>
-                                            <p class="text-[11px] text-slate-400 mt-0.5 truncate">Tagihan Current Semester Fee Rp 2.500.000 telah diterbitkan.</p>
-                                            <p class="text-[9px] text-slate-500 mt-1">Just now</p>
+                                            <p class="text-xs font-semibold text-slate-200 group-hover:text-emerald-400 transition-colors leading-none">
+                                                {{
+                                                    $inv->status->value === "overdue"
+                                                        ? "Tagihan Lewat Jatuh Tempo"
+                                                        : "Tagihan Belum Dibayar"
+                                                }}
+                                            </p>
+                                            <p class="text-[11px] text-slate-400 mt-1 truncate">
+                                                {{ $inv->number }} · Rp {{
+                                                    number_format(
+                                                        (float) $inv->amount,
+                                                        0,
+                                                        ",",
+                                                        ".",
+                                                    )
+                                                }}
+                                            </p>
+                                            <p class="text-[10px] text-slate-600 mt-0.5">
+                                                Jatuh tempo: {{
+                                                    $inv->due_date?->format(
+                                                        "d M Y",
+                                                    )
+                                                }}
+                                            </p>
                                         </div>
                                     </div>
-                                    {{-- Item 2: Pengingat Email --}}
-                                    <div
-                                        class="p-3.5 hover:bg-slate-750 transition-colors flex gap-3 items-start group"
-                                    >
+                                @endforeach
+
+                                {{-- Transaksi pending menunggu verifikasi --}}
+                                @foreach ($recentTransactions as $trx)
+                                    @if ($trx->isPending())
+                                        @php $hasNotif = true; @endphp
                                         <div
-                                            class="w-2 h-2 bg-transparent rounded-full mt-1.5 flex-shrink-0"
-                                        ></div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-xs font-medium text-slate-200">Email System Queue</p>
-                                            <p class="text-[11px] text-slate-400 mt-0.5 truncate">Notifikasi pengingat pembayaran sukses dikirim ke email kamu.</p>
-                                            <p class="text-[9px] text-slate-500 mt-1">2 hours ago</p>
+                                            class="p-3.5 hover:bg-slate-700/40 transition-colors flex gap-3 items-start group"
+                                        >
+                                            <div
+                                                class="w-2 h-2 bg-blue-400 rounded-full mt-1.5 flex-shrink-0"
+                                            ></div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-xs font-semibold text-slate-200 group-hover:text-emerald-400 transition-colors leading-none">Menunggu Verifikasi Admin</p>
+                                                <p class="text-[11px] text-slate-400 mt-1 truncate">
+                                                    {{ $trx->code }} · Rp {{
+                                                        number_format(
+                                                            (float) $trx->amount,
+                                                            0,
+                                                            ",",
+                                                            ".",
+                                                        )
+                                                    }}
+                                                </p>
+                                                <p class="text-[10px] text-slate-600 mt-0.5">{{ $trx->created_at->diffForHumans() }}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                @else
-                                    {{-- State Jika Kosong --}}
-                                    <div class="py-8 text-center">
-                                        <p class="text-xs text-slate-500">No new notifications</p>
+                                    @endif
+                                @endforeach
+
+                                @if (!$hasNotif)
+                                    <div class="py-10 text-center">
+                                        <svg class="w-8 h-8 text-slate-700 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                        </svg>
+                                        <p class="text-xs text-slate-600 font-medium">Tidak ada notifikasi</p>
+                                        <p class="text-[11px] text-slate-700 mt-0.5">Semua tagihan sudah beres!</p>
                                     </div>
                                 @endif
                             </div>
 
                             {{-- Footer Popover --}}
-                            <div class="border-t border-slate-700 bg-slate-850">
+                            <div
+                                class="border-t border-slate-700 bg-slate-900/50"
+                            >
                                 <a
-                                    href="#"
-                                    class="block text-center py-2 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 hover:bg-slate-750 transition-colors"
+                                    href="{{ route('student.transactions') }}"
+                                    class="block text-center py-2.5 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/5 transition-colors"
                                 >
-                                    View All Notifications
+                                    Lihat Semua Transaksi →
                                 </a>
                             </div>
                         </div>
@@ -774,13 +839,15 @@
                                                 <td
                                                     class="px-3 py-3 text-center"
                                                 >
-                                                    <button
-                                                        class="text-slate-600 hover:text-emerald-400 transition-colors p-1"
+                                                    <a
+                                                        href="{{ route('student.transactions.download', $trx) }}"
+                                                        class="text-slate-600 hover:text-emerald-400 transition-colors p-1 inline-block"
+                                                        title="Download Invoice"
                                                     >
                                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                                         </svg>
-                                                    </button>
+                                                    </a>
                                                 </td>
                                             </tr>
                                         @endforeach

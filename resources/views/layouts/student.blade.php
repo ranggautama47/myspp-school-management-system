@@ -151,13 +151,87 @@
                 </div>
 
                 <div class="flex items-center gap-3" x-data="{ open: false }">
-                    <button
-                        class="relative w-8 h-8 bg-slate-800 border border-slate-700/60 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors"
-                    >
-                        <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                    </button>
+                    {{-- ── Notification Bell ─────────────────────────────── --}}
+                    <div class="relative" x-data="{ openNotifications: false }">
+                        <button
+                            @click="openNotifications = !openNotifications"
+                            class="relative w-8 h-8 bg-slate-800 border border-slate-700/60 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors cursor-pointer"
+                        >
+                            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            @if ($notifCount > 0)
+                                <span class="absolute -top-1 -right-1 min-w-[16px] h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 border-2 border-slate-950">
+                                    {{ $notifCount > 9 ? '9+' : $notifCount }}
+                                </span>
+                            @endif
+                        </button>
+
+                        {{-- Popover --}}
+                        <div
+                            x-show="openNotifications"
+                            @click.outside="openNotifications = false"
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95 translate-y-[-8px]"
+                            x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 scale-95 translate-y-[-8px]"
+                            class="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl shadow-black/40 z-50 overflow-hidden"
+                            style="display: none"
+                        >
+                            {{-- Header --}}
+                            <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-semibold text-slate-200">Notifikasi</span>
+                                    @if ($notifCount > 0)
+                                        <span class="bg-rose-500/20 text-rose-400 text-[10px] font-semibold rounded-full px-1.5 py-0.5">
+                                            {{ $notifCount }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <button @click="openNotifications = false" class="text-slate-500 hover:text-slate-300 transition-colors">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {{-- Body --}}
+                            <div class="max-h-72 overflow-y-auto divide-y divide-slate-700/50">
+                                @forelse ($navNotifications as $notif)
+                                    <div class="p-3.5 hover:bg-slate-700/40 transition-colors flex gap-3 items-start group">
+                                        <div class="w-2 h-2 {{ $notif['dot'] }} rounded-full mt-1.5 flex-shrink-0 shadow-[0_0_6px_currentColor]"></div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-xs font-semibold text-slate-200 group-hover:text-emerald-400 transition-colors leading-none">
+                                                {{ $notif['title'] }}
+                                            </p>
+                                            <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">{{ $notif['message'] }}</p>
+                                            <p class="text-[10px] text-slate-600 mt-1">{{ $notif['time'] }}</p>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="py-10 text-center">
+                                        <svg class="w-8 h-8 text-slate-700 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                        </svg>
+                                        <p class="text-xs text-slate-600 font-medium">Tidak ada notifikasi</p>
+                                        <p class="text-[11px] text-slate-700 mt-0.5">Semua tagihan sudah beres!</p>
+                                    </div>
+                                @endforelse
+                            </div>
+
+                            {{-- Footer --}}
+                            <div class="border-t border-slate-700 bg-slate-900/50">
+                                <a
+                                    href="{{ route('student.transactions') }}"
+                                    class="block text-center py-2.5 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/5 transition-colors"
+                                >
+                                    Lihat Semua Transaksi →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="relative">
                         <button
