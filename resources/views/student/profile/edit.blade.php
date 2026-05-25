@@ -184,7 +184,7 @@
                         class="mt-4"
                         x-data="{
                         isDragging: false,
-                        fileName: '{{ $student->scan_ijazah ? basename($student->scan_ijazah) : '' }}',
+                        fileName: '{{ $user->scan_ijazah ? basename($user->scan_ijazah) : '' }}',
                         handleFileChange(event) {
                             const file = event.target.files[0];
                             if (file) {
@@ -255,6 +255,90 @@
                         @error ("scan_ijazah")
                             <p class="text-xs text-rose-400 mt-1">{{ $message }}</p>
                         @enderror
+                    </div>
+
+                    {{-- Diploma Preview --}}
+                    <div class="mt-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                        <span class="block text-xs font-medium text-slate-400 mb-2">Preview Scan Ijazah</span>
+                        
+                        @if ($user->scan_ijazah)
+                            @php
+                                $filePath = $user->scan_ijazah;
+                                $fileUrl = Storage::url($filePath);
+                                $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+                                $isPdf = $extension === 'pdf';
+                                $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif']);
+                            @endphp
+
+                            @if ($isPdf)
+                                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-slate-850 rounded-lg border border-slate-700">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-red-500/10 text-red-500">
+                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm font-semibold text-white">Dokumen PDF</span>
+                                                <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-red-500/20 text-red-400 border border-red-500/30">PDF</span>
+                                            </div>
+                                            <p class="text-xs text-slate-400 mt-0.5 truncate max-w-xs sm:max-w-md">{{ basename($filePath) }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                                        <a href="{{ $fileUrl }}" target="_blank" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            </svg>
+                                            Buka File
+                                        </a>
+                                        <a href="{{ $fileUrl }}" download class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                            Unduh
+                                        </a>
+                                    </div>
+                                </div>
+                            @elseif ($isImage)
+                                <div class="space-y-3">
+                                    <div class="relative overflow-hidden rounded-lg border border-slate-700 bg-slate-900 group max-h-80 flex items-center justify-center">
+                                        <img src="{{ $fileUrl }}" class="object-contain max-h-80 w-auto rounded-lg transition-transform duration-300 group-hover:scale-[1.02]" alt="Scan Ijazah" />
+                                    </div>
+                                    <div class="flex items-center justify-between gap-4 p-3 bg-slate-850 rounded-lg border border-slate-700">
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400">
+                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                            <p class="text-xs text-slate-400 truncate max-w-xs sm:max-w-md">{{ basename($filePath) }}</p>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <a href="{{ $fileUrl }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors">
+                                                Buka
+                                            </a>
+                                            <a href="{{ $fileUrl }}" download class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors">
+                                                Unduh
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="flex items-center justify-between p-3 bg-slate-850 rounded-lg border border-slate-700">
+                                    <span class="text-sm text-slate-300">File terunggah (Format tidak dikenal)</span>
+                                    <a href="{{ $fileUrl }}" target="_blank" class="text-xs text-emerald-400 hover:underline">Unduh File</a>
+                                </div>
+                            @endif
+                        @else
+                            <div class="flex flex-col items-center justify-center py-6 text-center border border-dashed border-slate-700 rounded-lg bg-slate-900/40">
+                                <svg class="w-8 h-8 text-slate-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                </svg>
+                                <span class="text-xs text-slate-500">Belum ada scan ijazah yang diunggah</span>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="flex justify-end pt-2">
