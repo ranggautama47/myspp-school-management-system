@@ -36,12 +36,11 @@ class InvoiceCreatedMail extends Mailable implements ShouldQueue
         $this->schoolAddress = Setting::get('school_address', '');
         $this->academicYear  = Setting::get('academic_year', '');
 
-        /** * Mengambil data Jurusan dan Semester melalui relasi.
-         * Pastikan model Invoice kamu punya relasi ke Student,
-         * dan Student punya relasi ke Department dan Semester.
-         */
-        $this->deptName = $this->invoice->student->department->name ?? '-';
-        $this->semesterName = $this->invoice->student->semester->name ?? '-';
+        // Semester dalam aplikasi ini disimpan pada Department,
+        // bukan langsung pada Student. Gunakan relasi Invoice->department.
+        $department = $this->invoice->department;
+        $this->deptName = $department?->name ?? '-';
+        $this->semesterName = $department?->semester ? 'Semester ' . $department->semester : '-';
     }
 
     public function envelope(): Envelope
