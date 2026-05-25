@@ -30,7 +30,7 @@ class PaymentSuccessMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '[MySPP] Pembayaran Berhasil — ' . $this->transaction->transaction_code . ' ✅',
+            subject: '[MySPP] Pembayaran Berhasil — ' . $this->transaction->code . ' ✅',
         );
     }
 

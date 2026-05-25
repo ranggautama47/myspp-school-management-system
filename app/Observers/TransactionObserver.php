@@ -43,12 +43,21 @@ class TransactionObserver
             ]);
             // EKSEKUSI EMAIL JIKA STATUS MENJADI PAID (LUNAS)
             if ($transaction->payment_status === TransactionStatus::Paid) {
-                // Pastikan siswa dan emailnya ada
-                if ($transaction->student && $transaction->student->user && $transaction->student->user->email) {
-                    Mail::to($transaction->student->user->email)->queue(new PaymentSuccessMail($transaction));
-                    Log::info('[Email] PaymentSuccessMail masuk antrean untuk: ' . $transaction->student->user->email);
+                // Eager load user relationship untuk menghindari N+1 queries
+                $transaction->loadMissing('user');
+
+                // Pastikan user dan emailnya ada (student email = user email)
+                if ($transaction->user && $transaction->user->email) {
+                    Mail::to($transaction->user->email)->queue(new PaymentSuccessMail($transaction));
+                    Log::info('[Email] PaymentSuccessMail masuk antrean untuk: ' . $transaction->user->email, [
+                        'transaction_code' => $transaction->code,
+                        'user_id' => $transaction->user->id,
+                    ]);
                 } else {
-                    Log::warning('[Email] Gagal mengirim PaymentSuccessMail: Data email siswa tidak ditemukan.', ['transaction_code' => $transaction->code]);
+                    Log::warning('[Email] Gagal mengirim PaymentSuccessMail: Data email user tidak ditemukan.', [
+                        'transaction_code' => $transaction->code,
+                        'user_id' => $transaction->user_id,
+                    ]);
                 }
             }
         }
