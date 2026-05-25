@@ -221,28 +221,35 @@
                                     </td>
                                     {{-- Identitas --}}
                                     <td valign="middle">
-                                        <p class="school-name" style="
+                                        <p
+                                            class="school-name"
+                                            style="
                                                 margin: 0;
                                                 font-size: 15px;
                                                 font-weight: 700;
                                                 color: #f1f5f9;
                                                 line-height: 1.35;
                                                 letter-spacing: -0.2px;
-                                            ">{{ $schoolName }}</p>
+                                            "
+                                        >{{ $schoolName }}</p>
                                         @if ($academicYear)
-                                            <p style="
+                                            <p
+                                                style="
                                                     margin: 3px 0 0;
                                                     font-size: 10.5px;
                                                     color: #64748b;
-                                                ">Tahun Ajaran {{ $academicYear }}</p>
+                                                "
+                                            >Tahun Ajaran {{ $academicYear }}</p>
                                         @endif
                                         @if ($schoolAddress)
-                                            <p style="
+                                            <p
+                                                style="
                                                     margin: 2px 0 0;
                                                     font-size: 10px;
                                                     color: #475569;
                                                     line-height: 1.5;
-                                                ">{{
+                                                "
+                                            >{{
                                                 Str::limit(
                                                     $schoolAddress,
                                                     70,
@@ -292,13 +299,16 @@
                                     </td>
                                 </tr>
                             </table>
-                            <p class="hero-title" style="
+                            <p
+                                class="hero-title"
+                                style="
                                     margin: 0;
                                     font-size: 22px;
                                     font-weight: 700;
                                     color: #ffffff;
                                     letter-spacing: -0.4px;
-                                ">Tagihan SPP Baru</p>
+                                "
+                            >Tagihan SPP Baru</p>
                             <p class="hero-sub" style="margin: 7px 0 0; font-size: 13px; color: rgba(255, 255, 255, 0.82); line-height: 1.5">Harap selesaikan pembayaran sebelum batas jatuh tempo</p>
                         </td>
                     </tr>
@@ -307,12 +317,14 @@
                     <tr>
                         <td class="mobile-pad" style="padding: 32px 36px 24px">
                             {{-- Sapaan --}}
-                            <p style="
+                            <p
+                                style="
                                     margin: 0 0 18px;
                                     font-size: 14px;
                                     color: #334155;
                                     line-height: 1.7;
-                                ">Halo <strong style="color: #0f172a;">{{ $studentName }}</strong>,<br />
+                                "
+                            >Halo <strong style="color: #0f172a;">{{ $studentName }}</strong>,<br />
                             Tagihan SPP baru telah diterbitkan oleh pihak sekolah. Silakan selesaikan pembayaran sebelum tanggal jatuh tempo.</p>
 
                             {{-- INFO TABLE --}}
@@ -339,14 +351,16 @@
                                             border-bottom: 1px solid #e2e8f0;
                                         "
                                     >
-                                        <p style="
+                                        <p
+                                            style="
                                                 margin: 0;
                                                 font-size: 10px;
                                                 font-weight: 700;
                                                 text-transform: uppercase;
                                                 letter-spacing: 1px;
                                                 color: #94a3b8;
-                                            ">Rincian Tagihan</p>
+                                            "
+                                        >Rincian Tagihan</p>
                                     </td>
                                 </tr>
 
@@ -413,6 +427,38 @@
                                         "
                                     >
                                         {{ $deptName }}
+                                    </td>
+                                </tr>
+
+                                {{-- Semester --}}
+                                <tr>
+                                    <td
+                                        class="row-label"
+                                        width="42%"
+                                        bgcolor="#f8fafc"
+                                        style="
+                                            padding: 11px 16px;
+                                            font-size: 12px;
+                                            font-weight: 700;
+                                            color: #64748b;
+                                            border-bottom: 1px solid #e2e8f0;
+                                            border-right: 1px solid #e2e8f0;
+                                            text-transform: uppercase;
+                                            letter-spacing: 0.4px;
+                                        "
+                                    >
+                                        Semester
+                                    </td>
+                                    <td
+                                        class="row-value"
+                                        style="
+                                            padding: 11px 16px;
+                                            font-size: 13px;
+                                            color: #1e293b;
+                                            border-bottom: 1px solid #e2e8f0;
+                                        "
+                                    >
+                                        {{ $semesterName }}
                                     </td>
                                 </tr>
 
@@ -507,21 +553,25 @@
                                                 padding: 14px 16px;
                                             "
                                         >
-                                            <p style="
+                                            <p
+                                                style="
                                                     margin: 0 0 4px;
                                                     font-size: 11.5px;
                                                     font-weight: 700;
                                                     color: #1e40af;
                                                     text-transform: uppercase;
                                                     letter-spacing: 0.5px;
-                                                ">📌 Catatan dari Sekolah</p>
-                                            <p style="
+                                                "
+                                            >📌 Catatan dari Sekolah</p>
+                                            <p
+                                                style="
                                                     margin: 0;
                                                     font-size: 13px;
                                                     color: #1e3a8a;
                                                     font-style: italic;
                                                     line-height: 1.6;
-                                                ">"{{ $invoice->notes }}"</p>
+                                                "
+                                            >"{{ $invoice->notes }}"</p>
                                         </td>
                                     </tr>
                                 </table>
@@ -567,12 +617,14 @@
                                 </tr>
                             </table>
 
-                            <p style="
+                            <p
+                                style="
                                     margin: 18px 0 0;
                                     text-align: center;
                                     font-size: 11.5px;
                                     color: #94a3b8;
-                                ">
+                                "
+                            >
                                 Atau login ke portal:
                                 <a
                                     href="{{ url('/dashboard') }}"
@@ -614,20 +666,24 @@
                                                 text-align: center;
                                             "
                                         >
-                                            <p style="
+                                            <p
+                                                style="
                                                     margin: 0 0 4px;
                                                     font-size: 10px;
                                                     font-weight: 700;
                                                     text-transform: uppercase;
                                                     letter-spacing: 1px;
                                                     color: #94a3b8;
-                                                ">Butuh Bantuan?</p>
-                                            <p style="
+                                                "
+                                            >Butuh Bantuan?</p>
+                                            <p
+                                                style="
                                                     margin: 0;
                                                     font-size: 12.5px;
                                                     color: #475569;
                                                     line-height: 1.7;
-                                                ">
+                                                "
+                                            >
                                                 @if ($schoolPhone) 📞{{ $schoolPhone }}@endif
                                                 @if ($schoolPhone && $schoolEmail)
                                                     <span
@@ -667,18 +723,22 @@
                                 border-radius: 0 0 16px 16px;
                             "
                         >
-                            <p style="
+                            <p
+                                style="
                                     margin: 0;
                                     font-size: 11px;
                                     color: #94a3b8;
                                     line-height: 1.7;
-                                ">Email ini dikirim secara otomatis oleh sistem <strong>{{ $schoolName }}</strong>.<br />
+                                "
+                            >Email ini dikirim secara otomatis oleh sistem <strong>{{ $schoolName }}</strong>.<br />
                             Mohon tidak membalas email ini langsung.</p>
-                            <p style="
+                            <p
+                                style="
                                     margin: 8px 0 0;
                                     font-size: 10.5px;
                                     color: #cbd5e1;
-                                ">
+                                "
+                            >
                                 &copy; {{ date("Y") }} {{ $schoolName }} &middot;
                                 Powered by <strong>MySPP</strong>
                             </p>
