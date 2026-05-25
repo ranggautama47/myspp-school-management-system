@@ -357,7 +357,7 @@ Phase 5 — Deployment              📋 Planned
 | Admin Dashboard     | ![Dashboard](screenshot/Admin%20Dashboard.png)             |
 | Finance Report      | ![Finance Report](screenshot/Finance-Report.png)           |
 | Payments Management | ![Payments Management](screenshot/Payments-Management.png) |
-| Student Portal      | _Coming after Phase 5_                                     |
+| Student Portal      | ![Student Portal](screenshot/Student-Portal.png)           |
 
 ---
 
