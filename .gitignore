@@ -25,3 +25,5 @@ Thumbs.db
 Role.md
 Finance Module — MySPP.md
 skills-lock.json
+*.sql
+myspp_backup.sql
