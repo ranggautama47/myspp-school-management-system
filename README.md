@@ -350,16 +350,32 @@ Phase 5 — Deployment              📋 Planned
 
 ---
 
-## 📸 Screenshots
+## 📸 Screenshots & Application Preview
 
-| Module              | Preview                                                    |
-| ------------------- | ---------------------------------------------------------- |
-| Admin Dashboard     | ![Dashboard](screenshot/Admin%20Dashboard.png)             |
-| Finance Report      | ![Finance Report](screenshot/Finance-Report.png)           |
-| Payments Management | ![Payments Management](screenshot/Payments-Management.png) |
-| Student Portal      | ![Student Portal](screenshot/Student-Portal.png)           |
+The MySPP system provides two distinct user flows: a comprehensive **Admin Dashboard** for school administrators and a personalized **Student Portal** for students.
 
----
+### 🔑 Authentication Portals
+
+| Portal            | Description                                                     | Preview                                        |
+| :---------------- | :-------------------------------------------------------------- | :--------------------------------------------- |
+| **Admin Login**   | Secure entry point for school administrators and IT staff.      | ![Admin Login](screenshot/Admin-Login.png)     |
+| **Student Login** | Dedicated login interface for students to access their billing. | ![Student Login](screenshot/Student-Login.png) |
+
+### 🖥️ Admin Panel Modules
+
+| Module                  | Description                                                                   | Preview                                                    |
+| :---------------------- | :---------------------------------------------------------------------------- | :--------------------------------------------------------- |
+| **Admin Dashboard**     | High-level analytics of school revenues, active student metrics, and logs.    | ![Admin Dashboard](screenshot/Admin-Dashboard.png)         |
+| **Finance Report**      | Detailed financial breakdown, charts, and downloadable reports.               | ![Finance Report](screenshot/Finance-Report.png)           |
+| **Payments Management** | Core management system to issue invoices, verify payments, and manage quotas. | ![Payments Management](screenshot/Payments-Management.png) |
+
+### 🎓 Student Portal Modules
+
+| Feature / Screen      | Description                                                                 | Preview                                            |
+| :-------------------- | :-------------------------------------------------------------------------- | :------------------------------------------------- |
+| **Student Dashboard** | Main welcome screen showing outstanding balances and announcements.         | ![Student Portal](screenshot/Student-Portal.png)   |
+| **Payment History**   | Complete ledger of student's past payments, receipt statuses, and invoices. | ![Payment History](screenshot/Payment-History.png) |
+| **My Profile**        | Student identity verification page and account security settings.           | ![My Profile](screenshot/My-Profile.png)           |
 
 ## 🐛 Known Issues & Notes
 
