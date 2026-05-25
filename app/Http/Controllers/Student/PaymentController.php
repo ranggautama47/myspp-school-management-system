@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Student;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Setting;
 use App\Http\Controllers\Controller;
 use App\Enums\TransactionStatus;
 use App\Models\Invoice;
@@ -10,6 +12,7 @@ use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -170,5 +173,48 @@ class PaymentController extends Controller
 
         return redirect()->route('student.transactions.show', $transaction)
             ->with('success', 'Transaksi berhasil dibuat. Silakan pilih metode pembayaran.');
+    }
+
+    // =========================================
+    // DOWNLOAD INVOICE — simple HTML receipt (print to PDF)
+    // GET /transactions/{transaction}/download
+    // =========================================
+
+    public function download(Request $request, Transaction $transaction)
+    {
+        abort_unless(
+            $transaction->user_id === $request->user()->id,
+            403,
+            'Transaksi ini bukan milikmu.'
+        );
+
+        $transaction->load([
+            'user.student.classroom',
+            'user.student.department',
+            'department',
+            'invoice',
+        ]);
+
+        try {
+            $pdf = Pdf::loadView('student.transactions.invoice', [
+                'transaction'  => $transaction,
+                'schoolName'   => Setting::get('school_name', 'Nama Sekolah'),
+                'schoolEmail'  => Setting::get('school_email', ''),
+                'schoolPhone'  => Setting::get('school_phone', ''),
+                'schoolAddress'=> Setting::get('school_address', ''),
+                'academicYear' => Setting::get('academic_year', ''),
+            ])
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'defaultFont'          => 'DejaVu Sans',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled'      => false,
+            ]);
+
+            return $pdf->download('Invoice-' . $transaction->code . '.pdf');
+        } catch (\Exception $e) {
+            Log::error('PDF Generation Failed: ' . $e->getMessage());
+            return back()->with('error', 'Gagal membuat file PDF. Silakan coba lagi nanti.');
+        }
     }
 }

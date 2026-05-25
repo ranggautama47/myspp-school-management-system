@@ -24,6 +24,7 @@ Route::middleware(['auth', 'student.only'])->group(function () {
     // Transactions
     Route::prefix('transactions')->name('student.transactions')->group(function () {
         Route::get('/',                    [PaymentController::class, 'index'])->name('');
+        Route::get('/{transaction}/download', [PaymentController::class, 'download'])->name('.download');
         Route::get('/{transaction}',       [PaymentController::class, 'show'])->name('.show');
         Route::post('/{transaction}/snap-token',    [PaymentController::class, 'getSnapToken'])->name('.snap-token');
         Route::post('/{transaction}/upload-proof',  [PaymentController::class, 'uploadProof'])->name('.upload-proof');
