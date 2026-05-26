@@ -1,14 +1,13 @@
 services:
-  # 1. Server Web (Aplikasi Laravel)
+  # 1. Server Web (Aplikasi Laravel dengan Docker)
   - type: web
     name: myspp-web
-    env: php
+    env: docker
     region: singapore # Pilih server terdekat dengan Indonesia
-    buildCommand: composer install --no-dev --optimize-autoloader && npm install && npm run build
+    dockerfilePath: ./Dockerfile
+    buildCommand: npm install && npm run build
     startCommand: php artisan migrate --force && apache2-foreground
     envVars:
-      - key: APP_KEY
-        generateValue: true
       - key: APP_NAME
         value: MySPP
       - key: APP_ENV
@@ -26,11 +25,12 @@ services:
       - key: SESSION_DRIVER
         value: file
 
-  # 2. Server Queue Worker (Untuk Email & Background Tasks)
+  # 2. Server Queue Worker (Untuk Email & Background Tasks dengan Docker)
   - type: worker
     name: myspp-queue-worker
-    env: php
+    env: docker
     region: singapore
+    dockerfilePath: ./Dockerfile
     buildCommand: composer install --no-dev --optimize-autoloader
     startCommand: php artisan queue:work --tries=3
     envVars:
