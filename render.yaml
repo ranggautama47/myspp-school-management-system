@@ -1,0 +1,42 @@
+services:
+  # 1. Server Web (Aplikasi Laravel)
+  - type: web
+    name: myspp-web
+    env: php
+    region: singapore # Pilih server terdekat dengan Indonesia
+    buildCommand: composer install --no-dev --optimize-autoloader && npm install && npm run build
+    startCommand: php artisan migrate --force && apache2-foreground
+    envVars:
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_NAME
+        value: MySPP
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: errorlog # Penting agar log bisa dibaca di dashboard Render
+      - key: DB_CONNECTION
+        value: mysql
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: CACHE_STORE
+        value: file
+      - key: SESSION_DRIVER
+        value: file
+
+  # 2. Server Queue Worker (Untuk Email & Background Tasks)
+  - type: worker
+    name: myspp-queue-worker
+    env: php
+    region: singapore
+    buildCommand: composer install --no-dev --optimize-autoloader
+    startCommand: php artisan queue:work --tries=3
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DB_CONNECTION
+        value: mysql
+      - key: QUEUE_CONNECTION
+        value: database
