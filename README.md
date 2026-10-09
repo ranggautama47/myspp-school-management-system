@@ -12,7 +12,7 @@
 
 <br/>
 
-[🚀 Live Demo](#) · [🐛 Report Bug](../../issues) · [✨ Request Feature](../../issues)
+ [🐛 Report Bug](../../issues) · [✨ Request Feature](../../issues)
 
 <br/>
 
